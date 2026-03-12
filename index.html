@@ -314,11 +314,19 @@
                         <span id="typeDisplay" class="type-badge"></span>
                     </div>
                     <div class="info-item">
+                        <span class="info-label">60類型番号:</span>
+                        <span id="typeNumber60" class="info-value"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">SP:</span>
+                        <span id="spNumber" class="info-value"></span>
+                    </div>
+                    <div class="info-item">
                         <span class="info-label">個性番号:</span>
                         <span id="personalityNumber" class="info-value"></span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">現在の年齢:</span>
+                        <span class="info-label">年齢:</span>
                         <span id="currentAge" class="info-value"></span>
                     </div>
                 </div>
@@ -348,6 +356,13 @@
             5,4,8,6,3,11,5,4,8,6,1,7,9,2,8,6,1,7,9,2,
             12,12,2,9,9,2,12,12,2,9,7,1,6,8,2,9,7,1,6,8,
             4,5,11,3,6,8,4,5,11,3,10,10,3,11,11,3,10,10,3,11
+        ];
+
+        // 60類型番号 → SP(1-12) マッピング
+        const SP_TABLE = [
+            7,2,8,5,4,6,9,1,10,11,2,12,11,4,6,7,1,8,7,2,
+            8,5,3,10,9,1,10,11,2,12,5,3,6,7,1,8,11,4,12,9,
+            3,10,9,1,8,5,4,6,5,3,6,7,2,12,11,4,12,9,3,10
         ];
 
         // 個性番号 → タイプ マッピング
@@ -439,10 +454,15 @@
             return PERSONALITY_TABLE[typeNumber60 - 1];
         }
 
-        // SP値を計算（60類型番号の末尾1桁、0→10）
-        function calculateSP(typeNumber60) {
-            const lastDigit = typeNumber60 % 10;
-            return lastDigit === 0 ? 10 : lastDigit;
+        // SP値を取得（60類型番号からテーブル参照、1-12）
+        function getSP(typeNumber60) {
+            return SP_TABLE[typeNumber60 - 1];
+        }
+
+        // サイクル順序決定用SP（1-10）
+        function getSPForCycle(sp) {
+            const mod = sp % 10;
+            return mod === 0 ? 10 : mod;
         }
 
         // タイプコードを取得（個性番号と年齢から）
@@ -533,8 +553,11 @@
             // 個性番号を取得
             const personalityNum = getPersonalityNumber(typeNumber60);
 
-            // SP値を計算（サイクル順序決定用）
-            const sp = calculateSP(typeNumber60);
+            // SP値を取得（1-12）
+            const sp = getSP(typeNumber60);
+
+            // サイクル順序決定用SP（1-10）
+            const spForCycle = getSPForCycle(sp);
 
             // 現在の年齢を計算
             const currentAge = calculateAge(birthYear, birthMonth, birthDay, startYear, startMonth);
@@ -547,18 +570,19 @@
 
             // 情報を表示
             document.getElementById('infoSection').style.display = 'block';
+            document.getElementById('typeNumber60').textContent = typeNumber60;
+            document.getElementById('spNumber').textContent = sp;
             document.getElementById('personalityNumber').textContent = personalityNum;
             document.getElementById('currentAge').textContent = `${currentAge}歳`;
 
             const typeDisplay = document.getElementById('typeDisplay');
             const baseType = typeCode.charAt(0);
-            const typeName = baseType === 'F' ? '前進型' : baseType === 'A' ? '行動型' : '思考型';
-            typeDisplay.textContent = `(${typeCode}) ${typeName} / ${faction}`;
+            typeDisplay.textContent = `(${typeCode}) / ${faction}`;
             typeDisplay.className = 'type-badge type-' + baseType.toLowerCase();
 
             // デバッグ情報（コンソール）
-            console.log('60類型番号:', typeNumber60, 'SP:', sp, '個性番号:', personalityNum, 'タイプ:', typeCode);
-            console.log('サイクル順序:', SP_CYCLE_ORDER[sp]);
+            console.log('60類型番号:', typeNumber60, 'SP:', sp, 'SP(cycle):', spForCycle, '個性番号:', personalityNum, 'タイプ:', typeCode);
+            console.log('サイクル順序:', SP_CYCLE_ORDER[spForCycle]);
 
             // 10ヶ月分のデータを生成
             const months = [];
@@ -574,7 +598,7 @@
                 }
 
                 const age = calculateAge(birthYear, birthMonth, birthDay, y, m);
-                const cycleInfo = calculateMonthlyCycle(sp, startYear, startMonth, y, m);
+                const cycleInfo = calculateMonthlyCycle(spForCycle, startYear, startMonth, y, m);
                 const advice = getAdvice(typeCode, cycleInfo.cycle, cycleInfo.level);
 
                 months.push({
