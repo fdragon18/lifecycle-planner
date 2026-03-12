@@ -349,6 +349,9 @@
         // サイクル文字一覧
         const CYCLES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'X', 'Y', 'Z'];
 
+        // 固定サイクル順序（VBA解析により確定）
+        const FIXED_CYCLE_ORDER = ['G', 'X', 'Y', 'Z', 'A', 'B', 'C', 'D', 'E', 'F'];
+
         // 60類型番号 → 個性番号(1-12) マッピング
         const PERSONALITY_TABLE = [
             5,4,8,6,3,11,5,4,8,6,1,7,9,2,8,6,1,7,9,2,
@@ -369,30 +372,10 @@
             7: 'A★', 8: 'A☆', 9: 'F★', 10: 'F☆', 11: 'M★', 12: 'M☆'
         };
 
-        // SP(1-10)別サイクル順序テーブル（*記号は変換後）
-        const SP_CYCLE_ORDER_RAW = {
-            1: ['*5', 'Z', 'B', '*6', 'E', '*7', '*8', 'Y', '*4', 'F'],
-            2: ['F', 'B', 'Z', 'E', '*6', '*8', '*7', '*4', 'Y', '*5'],
-            3: ['*4', 'F', '*5', 'Z', 'B', '*6', 'E', '*7', '*8', 'Y'],
-            4: ['Y', '*5', 'F', 'B', 'Z', 'E', '*6', '*8', '*7', '*4'],
-            5: ['*8', 'Y', '*4', 'F', '*5', 'Z', 'B', '*6', 'E', '*7'],
-            6: ['*7', '*4', 'Y', '*5', 'F', 'B', 'Z', 'E', '*6', '*8'],
-            7: ['E', '*7', '*8', 'Y', '*4', 'F', '*5', 'Z', 'B', '*6'],
-            8: ['*6', '*8', '*7', '*4', 'Y', '*5', 'F', 'B', 'Z', 'E'],
-            9: ['B', '*6', 'E', '*7', '*8', 'Y', '*4', 'F', '*5', 'Z'],
-            10: ['Z', 'E', '*6', '*8', '*7', '*4', 'Y', '*5', 'F', 'B']
-        };
-
-        // *記号 → サイクル文字 マッピング（マッピング1）
-        const STAR_MAPPING = {
-            '*4': 'G', '*5': 'X', '*6': 'D', '*7': 'A', '*8': 'C'
-        };
-
-        // SP別サイクル順序（*記号変換済み）
-        const SP_CYCLE_ORDER = {};
-        for (let sp = 1; sp <= 10; sp++) {
-            SP_CYCLE_ORDER[sp] = SP_CYCLE_ORDER_RAW[sp].map(c => STAR_MAPPING[c] || c);
-        }
+        // 注: 以前はSP別サイクル順序テーブルを使用していたが、
+        // VBA解析により以下の計算式で統一できることが判明:
+        // cycleIndex = (年の末尾 + SP_for_cycle + 2) % 10
+        // cycle = FIXED_CYCLE_ORDER[cycleIndex]
 
         // 初期化
         document.addEventListener('DOMContentLoaded', async () => {
@@ -479,20 +462,21 @@
             return (personalityNum % 2 === 1) ? '楽観派' : '慎重派';
         }
 
-        // 年のサイクルを計算（SP別テーブルを使用）
-        function calculateYearlyCycle(sp, startYear, targetYear) {
+        // 年のサイクルを計算（VBA解析による正確な計算式）
+        function calculateYearlyCycle(spForCycle, startYear, targetYear) {
             // 起点年からの経過年数を計算
             const yearsElapsed = targetYear - startYear;
-
-            // サイクルは10年周期
-            const cycleIndex = ((yearsElapsed % 10) + 10) % 10;
 
             // レベルは経過年数の3分割（10年ごとにレベルが変わる）
             const level = (Math.floor(Math.abs(yearsElapsed) / 10) % 3) + 1;
 
-            // SP別のサイクル順序からサイクル文字を取得
-            const cycleOrder = SP_CYCLE_ORDER[sp] || SP_CYCLE_ORDER[1];
-            const cycle = cycleOrder[cycleIndex];
+            // サイクルインデックス計算: (年の末尾 + SP + 2) % 10
+            // VBA解析により導出された式
+            const yearLastDigit = targetYear % 10;
+            const cycleIndex = (yearLastDigit + spForCycle + 2) % 10;
+
+            // 固定順序からサイクル文字を取得
+            const cycle = FIXED_CYCLE_ORDER[cycleIndex];
 
             return {
                 cycle: cycle,
@@ -549,14 +533,14 @@
             // 個性番号を取得
             const personalityNum = getPersonalityNumber(typeNumber60);
 
-            // SP値を取得（1-12）
+            // SP値を取得（1-12、表示用）
             const sp = getSP(typeNumber60);
 
-            // サイクル順序決定用SP（1-10）
-            const spForCycle = getSPForCycle(sp);
+            // サイクル順序決定用SP（1-10）: VBA解析により類型番号から直接計算
+            const spForCycle = typeNumber60 % 10 || 10;
 
-            // 現在の年齢を計算
-            const currentAge = calculateAge(birthYear, birthMonth, birthDay, startYear, startMonth);
+            // 現在の年齢を計算（年分析なので起点年の1月時点）
+            const currentAge = calculateAge(birthYear, birthMonth, birthDay, startYear, 1);
 
             // タイプコードを取得
             const typeCode = getTypeCode(personalityNum, currentAge);
@@ -567,7 +551,7 @@
             // 情報を表示
             document.getElementById('infoSection').style.display = 'block';
             document.getElementById('typeNumber60').textContent = typeNumber60;
-            document.getElementById('spNumber').textContent = sp;
+            document.getElementById('spNumber').textContent = `${sp} (サイクル用: ${spForCycle})`;
             document.getElementById('personalityNumber').textContent = personalityNum;
             document.getElementById('currentAge').textContent = `${currentAge}歳`;
 

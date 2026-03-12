@@ -16,8 +16,22 @@
   },
 
   "sp_from_type_number": {
-    "description": "60類型番号 → SP(1-10) 計算方法",
-    "formula": "sp = 類型番号 % 10; if (sp === 0) sp = 10;"
+    "description": "60類型番号 → SP(1-10) 計算方法（サイクル順序決定用）",
+    "formula": "sp = 類型番号 % 10; if (sp === 0) sp = 10;",
+    "note": "VBA解析により確認: ライフサイクルマスタの行検索に使用"
+  },
+
+  "cycle_calculation": {
+    "description": "年サイクル計算式（VBA解析により導出）",
+    "formula": "cycleIndex = (年の末尾 + SP_for_cycle + 2) % 10",
+    "cycle_order": ["G", "X", "Y", "Z", "A", "B", "C", "D", "E", "F"],
+    "example": {
+      "birth": "1993/10/1",
+      "type60": 52,
+      "sp_for_cycle": 2,
+      "year_2026": "(6 + 2 + 2) % 10 = 0 → G",
+      "year_2027": "(7 + 2 + 2) % 10 = 1 → X"
+    }
   },
 
   "sp_cycle_order": {
