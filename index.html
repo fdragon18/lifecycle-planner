@@ -296,14 +296,12 @@
                     </div>
 
                     <div class="input-group">
-                        <label>起点年月:</label>
+                        <label>起点年:</label>
                         <input type="number" id="startYear" placeholder="年" min="1900" max="2100">
                         <span>年</span>
-                        <input type="number" id="startMonth" placeholder="月" min="1" max="12">
-                        <span>月</span>
                     </div>
 
-                    <button class="btn-analyze" onclick="analyze()">分析する</button>
+                    <button class="btn-analyze" onclick="analyze()">年分析</button>
                 </div>
             </div>
 
@@ -398,10 +396,9 @@
 
         // 初期化
         document.addEventListener('DOMContentLoaded', async () => {
-            // 現在の年月をセット
+            // 現在の年をセット
             const now = new Date();
             document.getElementById('startYear').value = now.getFullYear();
-            document.getElementById('startMonth').value = now.getMonth() + 1;
 
             // サイクルデータを読み込み
             try {
@@ -482,16 +479,16 @@
             return (personalityNum % 2 === 1) ? '楽観派' : '慎重派';
         }
 
-        // 月のサイクルを計算（SP別テーブルを使用）
-        function calculateMonthlyCycle(sp, startYear, startMonth, targetYear, targetMonth) {
-            // 起点月からの経過月数を計算
-            const monthsElapsed = (targetYear - startYear) * 12 + (targetMonth - startMonth);
+        // 年のサイクルを計算（SP別テーブルを使用）
+        function calculateYearlyCycle(sp, startYear, targetYear) {
+            // 起点年からの経過年数を計算
+            const yearsElapsed = targetYear - startYear;
 
-            // サイクルは10ヶ月周期
-            const cycleIndex = ((monthsElapsed % 10) + 10) % 10;
+            // サイクルは10年周期
+            const cycleIndex = ((yearsElapsed % 10) + 10) % 10;
 
-            // レベルは経過月数の3分割（10ヶ月ごとにレベルが変わる）
-            const level = (Math.floor(Math.abs(monthsElapsed) / 10) % 3) + 1;
+            // レベルは経過年数の3分割（10年ごとにレベルが変わる）
+            const level = (Math.floor(Math.abs(yearsElapsed) / 10) % 3) + 1;
 
             // SP別のサイクル順序からサイクル文字を取得
             const cycleOrder = SP_CYCLE_ORDER[sp] || SP_CYCLE_ORDER[1];
@@ -540,9 +537,8 @@
             const birthMonth = parseInt(document.getElementById('birthMonth').value);
             const birthDay = parseInt(document.getElementById('birthDay').value);
             const startYear = parseInt(document.getElementById('startYear').value);
-            const startMonth = parseInt(document.getElementById('startMonth').value);
 
-            if (!birthYear || !birthMonth || !birthDay || !startYear || !startMonth) {
+            if (!birthYear || !birthMonth || !birthDay || !startYear) {
                 alert('すべての項目を入力してください');
                 return;
             }
@@ -584,87 +580,79 @@
             console.log('60類型番号:', typeNumber60, 'SP:', sp, 'SP(cycle):', spForCycle, '個性番号:', personalityNum, 'タイプ:', typeCode);
             console.log('サイクル順序:', SP_CYCLE_ORDER[spForCycle]);
 
-            // 10ヶ月分のデータを生成
-            const months = [];
-            const currentMonth = new Date().getMonth() + 1;
+            // 10年分のデータを生成
+            const years = [];
             const currentYearNow = new Date().getFullYear();
 
             for (let i = 0; i < 10; i++) {
-                let m = startMonth + i;
-                let y = startYear;
-                while (m > 12) {
-                    m -= 12;
-                    y++;
-                }
-
-                const age = calculateAge(birthYear, birthMonth, birthDay, y, m);
-                const cycleInfo = calculateMonthlyCycle(spForCycle, startYear, startMonth, y, m);
+                const y = startYear + i;
+                const age = calculateAge(birthYear, birthMonth, birthDay, y, birthMonth);
+                const cycleInfo = calculateYearlyCycle(spForCycle, startYear, y);
                 const advice = getAdvice(typeCode, cycleInfo.cycle, cycleInfo.level);
 
-                months.push({
+                years.push({
                     year: y,
-                    month: m,
                     age: age,
                     cycle: cycleInfo.cycle,
                     level: cycleInfo.level,
                     positive: advice.positive,
                     negative: advice.negative,
-                    isCurrent: (y === currentYearNow && m === currentMonth)
+                    isCurrent: (y === currentYearNow)
                 });
             }
 
             // テーブルを生成
-            renderTable(months);
+            renderYearTable(years);
             document.getElementById('resultsSection').style.display = 'block';
         }
 
-        // テーブルを描画
-        function renderTable(months) {
+        // 年分析テーブルを描画
+        function renderYearTable(years) {
             const header = document.getElementById('tableHeader');
             const body = document.getElementById('tableBody');
 
             // ヘッダー
             let headerHTML = '<tr><th class="row-header"></th>';
-            months.forEach(m => {
-                const cls = m.isCurrent ? 'current-month' : '';
-                headerHTML += `<th class="month-header ${cls}">${m.year}年${m.month}月</th>`;
+            years.forEach(y => {
+                const cls = y.isCurrent ? 'current-month' : '';
+                headerHTML += `<th class="month-header ${cls}">${y.year}年</th>`;
             });
             headerHTML += '</tr>';
             header.innerHTML = headerHTML;
 
             // 年齢行
             let ageRowHTML = '<tr class="age-row"><td class="row-header">年齢</td>';
-            months.forEach(m => {
-                const cls = m.isCurrent ? 'current-month' : '';
-                ageRowHTML += `<td class="${cls}">${m.age}歳</td>`;
+            years.forEach(y => {
+                const cls = y.isCurrent ? 'current-month' : '';
+                ageRowHTML += `<td class="${cls}">${y.age}歳</td>`;
             });
             ageRowHTML += '</tr>';
 
             // サイクル行
             let cycleRowHTML = '<tr><td class="row-header">サイクル</td>';
-            months.forEach(m => {
-                const cls = `cycle-cell cycle-${m.cycle.toLowerCase()} ${m.isCurrent ? 'current-month' : ''}`;
-                cycleRowHTML += `<td class="${cls}">${m.cycle}${m.level}</td>`;
+            years.forEach(y => {
+                const cls = `cycle-cell cycle-${y.cycle.toLowerCase()} ${y.isCurrent ? 'current-month' : ''}`;
+                cycleRowHTML += `<td class="${cls}">${y.cycle}${y.level}</td>`;
             });
             cycleRowHTML += '</tr>';
 
-            // ポジティブ行
-            let positiveRowHTML = '<tr class="advice-row"><td class="row-header" style="color:#2e7d32;">良い面</td>';
-            months.forEach(m => {
-                const cls = m.isCurrent ? 'current-month' : '';
-                positiveRowHTML += `<td class="positive ${cls}">${m.positive || '-'}</td>`;
+            // ポジティブ行（レベル1）
+            let positive1HTML = '<tr class="advice-row"><td class="row-header" style="color:#2e7d32;">良い面 Lv1</td>';
+            years.forEach(y => {
+                const cls = y.isCurrent ? 'current-month' : '';
+                positive1HTML += `<td class="positive ${cls}">${y.positive || '-'}</td>`;
             });
-            positiveRowHTML += '</tr>';
+            positive1HTML += '</tr>';
 
-            // ネガティブ行
-            let negativeRowHTML = '<tr class="advice-row"><td class="row-header" style="color:#c62828;">注意点</td>';
-            months.forEach(m => {
-                const cls = m.isCurrent ? 'current-month' : '';
-                negativeRowHTML += `<td class="negative ${cls}">${m.negative || '-'}</td>`;
+            // ネガティブ行（レベル1）
+            let negative1HTML = '<tr class="advice-row"><td class="row-header" style="color:#c62828;">注意点 Lv1</td>';
+            years.forEach(y => {
+                const cls = y.isCurrent ? 'current-month' : '';
+                negative1HTML += `<td class="negative ${cls}">${y.negative || '-'}</td>`;
             });
-            negativeRowHTML += '</tr>';
+            negative1HTML += '</tr>';
 
-            body.innerHTML = ageRowHTML + cycleRowHTML + positiveRowHTML + negativeRowHTML;
+            body.innerHTML = ageRowHTML + cycleRowHTML + positive1HTML + negative1HTML;
         }
     </script>
 </body>
