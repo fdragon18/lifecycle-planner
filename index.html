@@ -308,8 +308,16 @@
             <div id="infoSection" class="info-section" style="display:none;">
                 <div class="info-row">
                     <div class="info-item">
+                        <span class="info-label">個性番号:</span>
+                        <span id="personalityNumber" class="info-value" style="font-size: 24px; color: #1976d2;"></span>
+                    </div>
+                    <div class="info-item">
                         <span class="info-label">タイプ:</span>
                         <span id="typeDisplay" class="type-badge"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">派:</span>
+                        <span id="factionDisplay" class="info-value"></span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">60類型番号:</span>
@@ -318,10 +326,6 @@
                     <div class="info-item">
                         <span class="info-label">SP:</span>
                         <span id="spNumber" class="info-value"></span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">個性番号:</span>
-                        <span id="personalityNumber" class="info-value"></span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">年齢:</span>
@@ -550,19 +554,19 @@
 
             // 情報を表示
             document.getElementById('infoSection').style.display = 'block';
-            document.getElementById('typeNumber60').textContent = typeNumber60;
-            document.getElementById('spNumber').textContent = `${sp} (サイクル用: ${spForCycle})`;
             document.getElementById('personalityNumber').textContent = personalityNum;
+            document.getElementById('typeNumber60').textContent = typeNumber60;
+            document.getElementById('spNumber').textContent = spForCycle;
             document.getElementById('currentAge').textContent = `${currentAge}歳`;
+            document.getElementById('factionDisplay').textContent = faction;
 
             const typeDisplay = document.getElementById('typeDisplay');
             const baseType = typeCode.charAt(0);
-            typeDisplay.textContent = `(${typeCode}) / ${faction}`;
+            typeDisplay.textContent = `(${typeCode})`;
             typeDisplay.className = 'type-badge type-' + baseType.toLowerCase();
 
             // デバッグ情報（コンソール）
-            console.log('60類型番号:', typeNumber60, 'SP:', sp, 'SP(cycle):', spForCycle, '個性番号:', personalityNum, 'タイプ:', typeCode);
-            console.log('サイクル順序:', SP_CYCLE_ORDER[spForCycle]);
+            console.log('60類型番号:', typeNumber60, '個性番号:', personalityNum, 'SP(cycle):', spForCycle, 'タイプ:', typeCode);
 
             // 10年分のデータを生成
             const years = [];
