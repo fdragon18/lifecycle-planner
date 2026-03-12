@@ -351,6 +351,10 @@
                         <span class="info-label">年齢:</span>
                         <span id="currentAge" class="info-value"></span>
                     </div>
+                    <div class="info-item">
+                        <span class="info-label">レベル:</span>
+                        <span id="levelDisplay" class="info-value"></span>
+                    </div>
                 </div>
             </div>
 
@@ -585,6 +589,9 @@
             // 派を取得
             const faction = getFaction(personalityNum);
 
+            // 現在のサイクル情報を取得（起点年）
+            const currentCycleInfo = calculateYearlyCycle(spForCycle, startYear, startYear);
+
             // 情報を表示
             document.getElementById('infoSection').style.display = 'block';
             document.getElementById('personalityNumber').textContent = personalityNum;
@@ -592,6 +599,7 @@
             document.getElementById('spNumber').textContent = spForCycle;
             document.getElementById('currentAge').textContent = `${currentAge}歳`;
             document.getElementById('factionDisplay').textContent = faction;
+            document.getElementById('levelDisplay').textContent = currentCycleInfo.level;
 
             const typeDisplay = document.getElementById('typeDisplay');
             const baseType = typeCode.charAt(0);
@@ -626,8 +634,9 @@
             renderYearTable(years);
             document.getElementById('resultsSection').style.display = 'block';
 
-            // グラフを生成
-            renderLifecycleChart(years);
+            // グラフを生成（レイアウト計算後に描画）
+            document.getElementById('graphSection').style.display = 'block';
+            setTimeout(() => renderLifecycleChart(years), 50);
         }
 
         // 年分析テーブルを描画
@@ -652,11 +661,11 @@
             });
             ageRowHTML += '</tr>';
 
-            // サイクル行
+            // サイクル行（アルファベットのみ）
             let cycleRowHTML = '<tr><td class="row-header">サイクル</td>';
             years.forEach(y => {
                 const cls = `cycle-cell cycle-${y.cycle.toLowerCase()} ${y.isCurrent ? 'current-month' : ''}`;
-                cycleRowHTML += `<td class="${cls}">${y.cycle}${y.level}</td>`;
+                cycleRowHTML += `<td class="${cls}">${y.cycle}</td>`;
             });
             cycleRowHTML += '</tr>';
 
@@ -766,8 +775,6 @@
             points.forEach(p => {
                 ctx.fillText(p.year + '年', p.x, height - padding.bottom + 38);
             });
-
-            document.getElementById('graphSection').style.display = 'block';
         }
     </script>
 </body>
