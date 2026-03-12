@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ライフサイクルプランニングシート</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .password-screen {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 400px;
+            margin: 100px auto;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .password-screen h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .password-screen input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .password-screen button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .password-screen button:hover {
+            opacity: 0.9;
+        }
+
+        .error-msg {
+            color: #e74c3c;
+            margin-top: 10px;
+        }
+
+        .main-app {
+            display: none;
+        }
+
+        .input-section {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        .input-group input, .input-group select {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 80px;
+        }
+
+        .btn-analyze {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-analyze:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .info-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .info-row {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            font-weight: bold;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .type-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .type-f { background: #e3f2fd; color: #1976d2; }
+        .type-a { background: #fff3e0; color: #f57c00; }
+        .type-m { background: #f3e5f5; color: #7b1fa2; }
+
+        .results-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        .results-table th, .results-table td {
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .results-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+            position: sticky;
+            top: 0;
+        }
+
+        .results-table th.row-header {
+            text-align: left;
+            width: 120px;
+        }
+
+        .month-header {
+            font-size: 13px;
+        }
+
+        .age-row td {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .cycle-cell {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .advice-row td {
+            font-size: 11px;
+            padding: 8px 4px;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .positive {
+            color: #2e7d32;
+            background: #e8f5e9;
+        }
+
+        .negative {
+            color: #c62828;
+            background: #ffebee;
+        }
+
+        .cycle-a { background: #ffecb3; }
+        .cycle-b { background: #b3e5fc; }
+        .cycle-c { background: #c8e6c9; }
+        .cycle-d { background: #f8bbd9; }
+        .cycle-e { background: #d1c4e9; }
+        .cycle-f { background: #ffe0b2; }
+        .cycle-g { background: #b2dfdb; }
+        .cycle-x { background: #f5f5f5; }
+        .cycle-y { background: #cfd8dc; }
+        .cycle-z { background: #ffccbc; }
+
+        .current-month {
+            background: #fff59d !important;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .input-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .input-group {
+                justify-content: space-between;
+            }
+
+            .info-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="passwordScreen" class="password-screen">
+            <h2>ライフサイクルプランニング</h2>
+            <p style="margin-bottom: 20px; color: #666;">パスワードを入力してください</p>
+            <input type="password" id="passwordInput" placeholder="パスワード" onkeypress="if(event.key==='Enter')checkPassword()">
+            <button onclick="checkPassword()">ログイン</button>
+            <p id="errorMsg" class="error-msg" style="display:none;">パスワードが違います</p>
+        </div>
+
+        <div id="mainApp" class="main-app">
+            <h1>ライフサイクルプランニングシート</h1>
+
+            <div class="input-section">
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>生年月日:</label>
+                        <input type="number" id="birthYear" placeholder="年" min="1900" max="2100" value="1988">
+                        <span>年</span>
+                        <input type="number" id="birthMonth" placeholder="月" min="1" max="12" value="9">
+                        <span>月</span>
+                        <input type="number" id="birthDay" placeholder="日" min="1" max="31" value="23">
+                        <span>日</span>
+                    </div>
+
+                    <div class="input-group">
+                        <label>起点年月:</label>
+                        <input type="number" id="startYear" placeholder="年" min="1900" max="2100">
+                        <span>年</span>
+                        <input type="number" id="startMonth" placeholder="月" min="1" max="12">
+                        <span>月</span>
+                    </div>
+
+                    <button class="btn-analyze" onclick="analyze()">分析する</button>
+                </div>
+            </div>
+
+            <div id="infoSection" class="info-section" style="display:none;">
+                <div class="info-row">
+                    <div class="info-item">
+                        <span class="info-label">タイプ:</span>
+                        <span id="typeDisplay" class="type-badge"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">個性番号:</span>
+                        <span id="personalityNumber" class="info-value"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">現在の年齢:</span>
+                        <span id="currentAge" class="info-value"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="resultsSection" class="results-section" style="display:none;">
+                <table class="results-table">
+                    <thead id="tableHeader"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // パスワード（簡易認証）
+        const PASSWORD = 'lifecycle2024';
+
+        // サイクルデータ
+        let cycleData = {};
+
+        // サイクル文字一覧
+        const CYCLES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'X', 'Y', 'Z'];
+
+        // 60類型番号 → 個性番号(1-12) マッピング
+        const PERSONALITY_TABLE = [
+            5,4,8,6,3,11,5,4,8,6,1,7,9,2,8,6,1,7,9,2,
+            12,12,2,9,9,2,12,12,2,9,7,1,6,8,2,9,7,1,6,8,
+            4,5,11,3,6,8,4,5,11,3,10,10,3,11,11,3,10,10,3,11
+        ];
+
+        // 個性番号 → タイプ マッピング
+        const TYPE_MAPPING = {
+            1: 'F★', 2: 'F☆', 3: 'A★', 4: 'A☆', 5: 'M★', 6: 'M☆',
+            7: 'A★', 8: 'A☆', 9: 'F★', 10: 'F☆', 11: 'M★', 12: 'M☆'
+        };
+
+        // SP(1-10)別サイクル順序テーブル（*記号は変換後）
+        const SP_CYCLE_ORDER_RAW = {
+            1: ['*5', 'Z', 'B', '*6', 'E', '*7', '*8', 'Y', '*4', 'F'],
+            2: ['F', 'B', 'Z', 'E', '*6', '*8', '*7', '*4', 'Y', '*5'],
+            3: ['*4', 'F', '*5', 'Z', 'B', '*6', 'E', '*7', '*8', 'Y'],
+            4: ['Y', '*5', 'F', 'B', 'Z', 'E', '*6', '*8', '*7', '*4'],
+            5: ['*8', 'Y', '*4', 'F', '*5', 'Z', 'B', '*6', 'E', '*7'],
+            6: ['*7', '*4', 'Y', '*5', 'F', 'B', 'Z', 'E', '*6', '*8'],
+            7: ['E', '*7', '*8', 'Y', '*4', 'F', '*5', 'Z', 'B', '*6'],
+            8: ['*6', '*8', '*7', '*4', 'Y', '*5', 'F', 'B', 'Z', 'E'],
+            9: ['B', '*6', 'E', '*7', '*8', 'Y', '*4', 'F', '*5', 'Z'],
+            10: ['Z', 'E', '*6', '*8', '*7', '*4', 'Y', '*5', 'F', 'B']
+        };
+
+        // *記号 → サイクル文字 マッピング（マッピング1）
+        const STAR_MAPPING = {
+            '*4': 'G', '*5': 'X', '*6': 'D', '*7': 'A', '*8': 'C'
+        };
+
+        // SP別サイクル順序（*記号変換済み）
+        const SP_CYCLE_ORDER = {};
+        for (let sp = 1; sp <= 10; sp++) {
+            SP_CYCLE_ORDER[sp] = SP_CYCLE_ORDER_RAW[sp].map(c => STAR_MAPPING[c] || c);
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 現在の年月をセット
+            const now = new Date();
+            document.getElementById('startYear').value = now.getFullYear();
+            document.getElementById('startMonth').value = now.getMonth() + 1;
+
+            // サイクルデータを読み込み
+            try {
+                const response = await fetch('cycle_data.json');
+                cycleData = await response.json();
+                console.log('Loaded cycle data:', Object.keys(cycleData).length, 'entries');
+            } catch (e) {
+                console.error('Failed to load cycle data:', e);
+            }
+
+            // セッションチェック
+            if (sessionStorage.getItem('authenticated') === 'true') {
+                showMainApp();
+            }
+        });
+
+        function checkPassword() {
+            const input = document.getElementById('passwordInput').value;
+            if (input === PASSWORD) {
+                sessionStorage.setItem('authenticated', 'true');
+                showMainApp();
+            } else {
+                document.getElementById('errorMsg').style.display = 'block';
+            }
+        }
+
+        function showMainApp() {
+            document.getElementById('passwordScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+        }
+
+        // Excelシリアル日付を計算（1900年1月1日を1とする）
+        function excelSerialDate(year, month, day) {
+            // JavaScript Date: 1970年1月1日が基準
+            // Excel Date: 1900年1月1日が1（1899年12月31日が0）
+            const date = new Date(year, month - 1, day);
+            const excelEpoch = new Date(1899, 11, 30); // Excelの基準日
+            const diffMs = date - excelEpoch;
+            return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        }
+
+        // 60類型番号を計算
+        function calculate60TypeNumber(year, month, day) {
+            const serialDate = excelSerialDate(year, month, day);
+            return ((serialDate + 8) % 60) + 1;
+        }
+
+        // 個性番号を取得（60類型番号から）
+        function getPersonalityNumber(typeNumber60) {
+            return PERSONALITY_TABLE[typeNumber60 - 1];
+        }
+
+        // SP値を計算（60類型番号の末尾1桁、0→10）
+        function calculateSP(typeNumber60) {
+            const lastDigit = typeNumber60 % 10;
+            return lastDigit === 0 ? 10 : lastDigit;
+        }
+
+        // タイプコードを取得（個性番号と年齢から）
+        function getTypeCode(personalityNum, age) {
+            let baseType = TYPE_MAPPING[personalityNum];
+            if (!baseType) baseType = 'F★';
+
+            // 10歳未満はcタイプ
+            if (age < 10) {
+                return baseType.charAt(0) + 'c';
+            }
+            return baseType;
+        }
+
+        // 派を判定
+        function getFaction(personalityNum) {
+            return (personalityNum % 2 === 1) ? '楽観派' : '慎重派';
+        }
+
+        // 月のサイクルを計算（SP別テーブルを使用）
+        function calculateMonthlyCycle(sp, startYear, startMonth, targetYear, targetMonth) {
+            // 起点月からの経過月数を計算
+            const monthsElapsed = (targetYear - startYear) * 12 + (targetMonth - startMonth);
+
+            // サイクルは10ヶ月周期
+            const cycleIndex = ((monthsElapsed % 10) + 10) % 10;
+
+            // レベルは経過月数の3分割（10ヶ月ごとにレベルが変わる）
+            const level = (Math.floor(Math.abs(monthsElapsed) / 10) % 3) + 1;
+
+            // SP別のサイクル順序からサイクル文字を取得
+            const cycleOrder = SP_CYCLE_ORDER[sp] || SP_CYCLE_ORDER[1];
+            const cycle = cycleOrder[cycleIndex];
+
+            return {
+                cycle: cycle,
+                level: level
+            };
+        }
+
+        // 年齢を計算
+        function calculateAge(birthYear, birthMonth, birthDay, targetYear, targetMonth) {
+            let age = targetYear - birthYear;
+            if (targetMonth < birthMonth || (targetMonth === birthMonth && 1 < birthDay)) {
+                age--;
+            }
+            return age;
+        }
+
+        // サイクルに対応するアドバイスを取得
+        function getAdvice(typeCode, cycle, level) {
+            // コード形式: (F☆)A1
+            const code = `(${typeCode})${cycle}${level}`;
+
+            const advice = cycleData[code];
+            if (advice) {
+                return advice;
+            }
+
+            // フォールバック: 他のタイプバリエーションを試す
+            const baseType = typeCode.charAt(0);
+            for (const sym of ['★', '☆', 'c']) {
+                const fallbackCode = `(${baseType}${sym})${cycle}${level}`;
+                if (cycleData[fallbackCode]) {
+                    return cycleData[fallbackCode];
+                }
+            }
+
+            return { positive: '', negative: '' };
+        }
+
+        // 分析実行
+        function analyze() {
+            const birthYear = parseInt(document.getElementById('birthYear').value);
+            const birthMonth = parseInt(document.getElementById('birthMonth').value);
+            const birthDay = parseInt(document.getElementById('birthDay').value);
+            const startYear = parseInt(document.getElementById('startYear').value);
+            const startMonth = parseInt(document.getElementById('startMonth').value);
+
+            if (!birthYear || !birthMonth || !birthDay || !startYear || !startMonth) {
+                alert('すべての項目を入力してください');
+                return;
+            }
+
+            // 60類型番号を計算
+            const typeNumber60 = calculate60TypeNumber(birthYear, birthMonth, birthDay);
+
+            // 個性番号を取得
+            const personalityNum = getPersonalityNumber(typeNumber60);
+
+            // SP値を計算（サイクル順序決定用）
+            const sp = calculateSP(typeNumber60);
+
+            // 現在の年齢を計算
+            const currentAge = calculateAge(birthYear, birthMonth, birthDay, startYear, startMonth);
+
+            // タイプコードを取得
+            const typeCode = getTypeCode(personalityNum, currentAge);
+
+            // 派を取得
+            const faction = getFaction(personalityNum);
+
+            // 情報を表示
+            document.getElementById('infoSection').style.display = 'block';
+            document.getElementById('personalityNumber').textContent = personalityNum;
+            document.getElementById('currentAge').textContent = `${currentAge}歳`;
+
+            const typeDisplay = document.getElementById('typeDisplay');
+            const baseType = typeCode.charAt(0);
+            const typeName = baseType === 'F' ? '前進型' : baseType === 'A' ? '行動型' : '思考型';
+            typeDisplay.textContent = `(${typeCode}) ${typeName} / ${faction}`;
+            typeDisplay.className = 'type-badge type-' + baseType.toLowerCase();
+
+            // デバッグ情報（コンソール）
+            console.log('60類型番号:', typeNumber60, 'SP:', sp, '個性番号:', personalityNum, 'タイプ:', typeCode);
+            console.log('サイクル順序:', SP_CYCLE_ORDER[sp]);
+
+            // 10ヶ月分のデータを生成
+            const months = [];
+            const currentMonth = new Date().getMonth() + 1;
+            const currentYearNow = new Date().getFullYear();
+
+            for (let i = 0; i < 10; i++) {
+                let m = startMonth + i;
+                let y = startYear;
+                while (m > 12) {
+                    m -= 12;
+                    y++;
+                }
+
+                const age = calculateAge(birthYear, birthMonth, birthDay, y, m);
+                const cycleInfo = calculateMonthlyCycle(sp, startYear, startMonth, y, m);
+                const advice = getAdvice(typeCode, cycleInfo.cycle, cycleInfo.level);
+
+                months.push({
+                    year: y,
+                    month: m,
+                    age: age,
+                    cycle: cycleInfo.cycle,
+                    level: cycleInfo.level,
+                    positive: advice.positive,
+                    negative: advice.negative,
+                    isCurrent: (y === currentYearNow && m === currentMonth)
+                });
+            }
+
+            // テーブルを生成
+            renderTable(months);
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        // テーブルを描画
+        function renderTable(months) {
+            const header = document.getElementById('tableHeader');
+            const body = document.getElementById('tableBody');
+
+            // ヘッダー
+            let headerHTML = '<tr><th class="row-header"></th>';
+            months.forEach(m => {
+                const cls = m.isCurrent ? 'current-month' : '';
+                headerHTML += `<th class="month-header ${cls}">${m.year}年${m.month}月</th>`;
+            });
+            headerHTML += '</tr>';
+            header.innerHTML = headerHTML;
+
+            // 年齢行
+            let ageRowHTML = '<tr class="age-row"><td class="row-header">年齢</td>';
+            months.forEach(m => {
+                const cls = m.isCurrent ? 'current-month' : '';
+                ageRowHTML += `<td class="${cls}">${m.age}歳</td>`;
+            });
+            ageRowHTML += '</tr>';
+
+            // サイクル行
+            let cycleRowHTML = '<tr><td class="row-header">サイクル</td>';
+            months.forEach(m => {
+                const cls = `cycle-cell cycle-${m.cycle.toLowerCase()} ${m.isCurrent ? 'current-month' : ''}`;
+                cycleRowHTML += `<td class="${cls}">${m.cycle}${m.level}</td>`;
+            });
+            cycleRowHTML += '</tr>';
+
+            // ポジティブ行
+            let positiveRowHTML = '<tr class="advice-row"><td class="row-header" style="color:#2e7d32;">良い面</td>';
+            months.forEach(m => {
+                const cls = m.isCurrent ? 'current-month' : '';
+                positiveRowHTML += `<td class="positive ${cls}">${m.positive || '-'}</td>`;
+            });
+            positiveRowHTML += '</tr>';
+
+            // ネガティブ行
+            let negativeRowHTML = '<tr class="advice-row"><td class="row-header" style="color:#c62828;">注意点</td>';
+            months.forEach(m => {
+                const cls = m.isCurrent ? 'current-month' : '';
+                negativeRowHTML += `<td class="negative ${cls}">${m.negative || '-'}</td>`;
+            });
+            negativeRowHTML += '</tr>';
+
+            body.innerHTML = ageRowHTML + cycleRowHTML + positiveRowHTML + negativeRowHTML;
+        }
+    </script>
+</body>
+</html>
