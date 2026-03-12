@@ -253,6 +253,26 @@
             font-weight: bold;
         }
 
+        .graph-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .graph-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .graph-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+
         @media (max-width: 768px) {
             .input-row {
                 flex-direction: column;
@@ -340,6 +360,13 @@
                     <tbody id="tableBody"></tbody>
                 </table>
             </div>
+
+            <div id="graphSection" class="graph-section" style="display:none;">
+                <div class="graph-title">ライフサイクル</div>
+                <div class="graph-container">
+                    <canvas id="lifecycleChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -355,6 +382,12 @@
 
         // 固定サイクル順序（VBA解析により確定）
         const FIXED_CYCLE_ORDER = ['G', 'X', 'Y', 'Z', 'A', 'B', 'C', 'D', 'E', 'F'];
+
+        // サイクル → グラフY値（Excelグラフから読み取り）
+        const CYCLE_VALUES = {
+            'A': 10, 'B': 3.5, 'C': 4, 'D': 7, 'E': 8,
+            'F': 7.5, 'G': 8, 'X': 7.5, 'Y': 2, 'Z': 2
+        };
 
         // 60類型番号 → 個性番号(1-12) マッピング
         const PERSONALITY_TABLE = [
@@ -592,6 +625,9 @@
             // テーブルを生成
             renderYearTable(years);
             document.getElementById('resultsSection').style.display = 'block';
+
+            // グラフを生成
+            renderLifecycleChart(years);
         }
 
         // 年分析テーブルを描画
@@ -641,6 +677,97 @@
             negative1HTML += '</tr>';
 
             body.innerHTML = ageRowHTML + cycleRowHTML + positive1HTML + negative1HTML;
+        }
+
+        // ライフサイクルグラフを描画
+        function renderLifecycleChart(years) {
+            const canvas = document.getElementById('lifecycleChart');
+            const ctx = canvas.getContext('2d');
+            const container = canvas.parentElement;
+
+            // Canvas サイズ設定
+            canvas.width = container.offsetWidth;
+            canvas.height = 280;
+
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = { top: 30, right: 40, bottom: 50, left: 50 };
+            const chartWidth = width - padding.left - padding.right;
+            const chartHeight = height - padding.top - padding.bottom;
+
+            // クリア
+            ctx.clearRect(0, 0, width, height);
+
+            // Y軸の範囲
+            const yMin = 0;
+            const yMax = 10;
+
+            // データポイント
+            const points = years.map((y, i) => ({
+                x: padding.left + (i / (years.length - 1)) * chartWidth,
+                y: padding.top + chartHeight - ((CYCLE_VALUES[y.cycle] || 5) / yMax) * chartHeight,
+                cycle: y.cycle,
+                year: y.year,
+                isCurrent: y.isCurrent
+            }));
+
+            // グリッド線
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                const y = padding.top + (i / 10) * chartHeight;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(width - padding.right, y);
+                ctx.stroke();
+            }
+
+            // Y軸ラベル
+            ctx.fillStyle = '#666';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 10; i += 2) {
+                const y = padding.top + chartHeight - (i / 10) * chartHeight;
+                ctx.fillText(i.toString(), padding.left - 10, y + 4);
+            }
+
+            // 折れ線
+            ctx.beginPath();
+            ctx.strokeStyle = '#1976d2';
+            ctx.lineWidth = 3;
+            points.forEach((p, i) => {
+                if (i === 0) ctx.moveTo(p.x, p.y);
+                else ctx.lineTo(p.x, p.y);
+            });
+            ctx.stroke();
+
+            // データポイント
+            points.forEach(p => {
+                ctx.beginPath();
+                ctx.fillStyle = p.isCurrent ? '#ff9800' : '#1976d2';
+                ctx.arc(p.x, p.y, p.isCurrent ? 8 : 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+
+            // X軸ラベル（サイクル文字）
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            points.forEach(p => {
+                ctx.fillText(p.cycle, p.x, height - padding.bottom + 20);
+            });
+
+            // X軸ラベル（年）
+            ctx.fillStyle = '#666';
+            ctx.font = '11px sans-serif';
+            points.forEach(p => {
+                ctx.fillText(p.year + '年', p.x, height - padding.bottom + 38);
+            });
+
+            document.getElementById('graphSection').style.display = 'block';
         }
     </script>
 </body>
