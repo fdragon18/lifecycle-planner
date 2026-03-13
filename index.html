@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ライフサイクルプランニングシート</title>
-    <!-- v2.5 - サイクル計算をExcelルックアップテーブル方式に変更 -->
+    <!-- v2.6 - サイクルテーブルを列K以降から正しく抽出 -->
     <style>
         * {
             box-sizing: border-box;
@@ -486,24 +486,21 @@
             7: 'A★', 8: 'A☆', 9: 'M★', 10: 'M☆', 11: 'F★', 12: 'F☆'
         };
 
-        // SP別サイクルテーブル（Excelライフサイクルマスタ（年）行32-41から抽出）
-        // キー: SP % 10 (0は10として扱う)
-        // 値: 列B-Kの10サイクル
+        // SP別サイクルテーブル（Excelライフサイクルマスタ（年）列K以降から抽出）
+        // キー: SP % 10
+        // 値: 2026年（末尾6）から始まる10年分のサイクル
         const SP_CYCLE_TABLE = {
-            1: ['D', 'E', 'F', 'G', 'X', 'Y', 'Z', 'A', 'B', 'C'],
-            2: ['C', 'F', 'E', 'X', 'G', 'Z', 'Y', 'B', 'A', 'D'],
-            3: ['B', 'C', 'D', 'E', 'F', 'G', 'X', 'Y', 'Z', 'A'],
-            4: ['A', 'D', 'C', 'F', 'E', 'X', 'G', 'Z', 'Y', 'B'],
-            5: ['Z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'X', 'Y'],
-            6: ['Y', 'B', 'A', 'D', 'C', 'F', 'E', 'X', 'G', 'Z'],
-            7: ['X', 'Y', 'Z', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
-            8: ['G', 'Z', 'Y', 'B', 'A', 'D', 'C', 'F', 'E', 'X'],
-            9: ['F', 'G', 'X', 'Y', 'Z', 'A', 'B', 'C', 'D', 'E'],
-            0: ['E', 'X', 'G', 'Z', 'Y', 'B', 'A', 'D', 'C', 'F']  // SP=10,20等
+            1: ['C', 'D', 'E', 'F', 'G', 'X', 'Y', 'Z', 'A', 'B'],  // SP=1,11
+            2: ['D', 'C', 'F', 'E', 'X', 'G', 'Z', 'Y', 'B', 'A'],  // SP=2,12
+            3: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'X', 'Y', 'Z'],  // SP=3
+            4: ['B', 'A', 'D', 'C', 'F', 'E', 'X', 'G', 'Z', 'Y'],  // SP=4
+            5: ['Y', 'Z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'X'],  // SP=5
+            6: ['Z', 'Y', 'B', 'A', 'D', 'C', 'F', 'E', 'X', 'G'],  // SP=6
+            7: ['G', 'X', 'Y', 'Z', 'A', 'B', 'C', 'D', 'E', 'F'],  // SP=7
+            8: ['X', 'G', 'Z', 'Y', 'B', 'A', 'D', 'C', 'F', 'E'],  // SP=8
+            9: ['E', 'F', 'G', 'X', 'Y', 'Z', 'A', 'B', 'C', 'D'],  // SP=9
+            0: ['F', 'E', 'X', 'G', 'Z', 'Y', 'B', 'A', 'D', 'C']   // SP=10
         };
-
-        // 年の下1桁 → 列インデックス（Excelの列B-Kに対応）
-        const YEAR_DIGIT_TO_COL = {7:0, 8:1, 9:2, 0:3, 1:4, 2:5, 3:6, 4:7, 5:8, 6:9};
 
         // プルダウン初期化
         function populateDropdowns() {
@@ -647,10 +644,11 @@
             const spKey = sp % 10;
             const baseCycles = SP_CYCLE_TABLE[spKey];
 
-            // 年の下1桁で列インデックスを決定（直接マッピング）
+            // 年の下1桁からインデックスを計算
+            // テーブルは2026年（末尾6）=インデックス0から始まる
             const yearDigit = targetYear % 10;
-            const colIndex = YEAR_DIGIT_TO_COL[yearDigit];
-            const cycle = baseCycles[colIndex];
+            const cycleIndex = (yearDigit + 4) % 10;  // 6→0, 7→1, ..., 5→9
+            const cycle = baseCycles[cycleIndex];
 
             return {
                 cycle: cycle,
