@@ -693,6 +693,12 @@
                         <label>名前: </label>
                         <input type="text" id="searchName" placeholder="(任意)">
                     </div>
+                    <div class="input-group" id="saveCheckGroup" style="display:none;">
+                        <label style="cursor:pointer;">
+                            <input type="checkbox" id="saveToHistoryCheck" style="width:auto; margin-right:4px;">
+                            履歴に保存
+                        </label>
+                    </div>
                 </div>
                 <div class="input-row" style="margin-top: 15px;">
                     <button class="btn-analyze" onclick="analyze()">年分析</button>
@@ -1097,6 +1103,7 @@
             const loginBtn = document.getElementById('btnShowLogin');
             const signupBtn = document.getElementById('btnShowSignup');
             const logoutBtn = document.getElementById('btnLogout');
+            const saveCheckGroup = document.getElementById('saveCheckGroup');
 
             if (user) {
                 statusEl.textContent = user.email;
@@ -1104,11 +1111,13 @@
                 signupBtn.style.display = 'none';
                 logoutBtn.style.display = 'inline-block';
                 document.getElementById('historySection').style.display = 'block';
+                if (saveCheckGroup) saveCheckGroup.style.display = 'flex';
             } else {
                 statusEl.textContent = 'ログインしていません';
                 loginBtn.style.display = 'inline-block';
                 signupBtn.style.display = 'inline-block';
                 logoutBtn.style.display = 'none';
+                if (saveCheckGroup) saveCheckGroup.style.display = 'none';
             }
         }
 
@@ -1177,6 +1186,10 @@
 
         async function saveToHistory(birthYear, birthMonth, birthDay) {
             if (!currentUser) return;
+
+            // チェックボックスがオフなら保存しない
+            const saveCheck = document.getElementById('saveToHistoryCheck');
+            if (!saveCheck || !saveCheck.checked) return;
 
             const name = document.getElementById('searchName').value.trim() || null;
 
