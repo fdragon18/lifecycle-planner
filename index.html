@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ライフサイクルプランニングシート</title>
-    <!-- v2.1 - TYPE_MAPPING修正, 2パターン方式 -->
+    <!-- v2.3 - プルダウン化, 初期値1993/10/6 -->
     <style>
         * {
             box-sizing: border-box;
@@ -308,17 +308,17 @@
                 <div class="input-row">
                     <div class="input-group">
                         <label>生年月日:</label>
-                        <input type="number" id="birthYear" placeholder="年" min="1900" max="2100" value="1988">
+                        <select id="birthYear"></select>
                         <span>年</span>
-                        <input type="number" id="birthMonth" placeholder="月" min="1" max="12" value="9">
+                        <select id="birthMonth"></select>
                         <span>月</span>
-                        <input type="number" id="birthDay" placeholder="日" min="1" max="31" value="23">
+                        <select id="birthDay"></select>
                         <span>日</span>
                     </div>
 
                     <div class="input-group">
                         <label>起点年:</label>
-                        <input type="number" id="startYear" placeholder="年" min="1900" max="2100">
+                        <select id="startYear"></select>
                         <span>年</span>
                     </div>
 
@@ -388,10 +388,10 @@
         // 固定サイクル順序（VBA解析により確定）
         const FIXED_CYCLE_ORDER = ['G', 'X', 'Y', 'Z', 'A', 'B', 'C', 'D', 'E', 'F'];
 
-        // サイクル → グラフY値（Excelグラフから読み取り）
+        // サイクル → グラフY値（Excelの基本グラフ!M2:N11 VLOOKUPテーブルから抽出）
         const CYCLE_VALUES = {
-            'A': 10, 'B': 3.5, 'C': 4, 'D': 7, 'E': 8,
-            'F': 7.5, 'G': 8, 'X': 7.5, 'Y': 2, 'Z': 2
+            'A': 4, 'B': 2, 'C': 6, 'D': 5, 'E': 8,
+            'F': 9, 'G': 8, 'X': 10, 'Y': 3, 'Z': 4
         };
 
         // 60類型番号 → 個性番号(1-12) マッピング
@@ -427,11 +427,56 @@
             return (sp % 2 === 0) ? CYCLE_PATTERN_B : CYCLE_PATTERN_A;
         }
 
+        // プルダウン初期化
+        function populateDropdowns() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+
+            // 生年: 1920年〜現在年
+            const birthYearSelect = document.getElementById('birthYear');
+            for (let y = currentYear; y >= 1920; y--) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                birthYearSelect.appendChild(opt);
+            }
+            birthYearSelect.value = 1993; // デフォルト
+
+            // 月: 1〜12
+            const birthMonthSelect = document.getElementById('birthMonth');
+            for (let m = 1; m <= 12; m++) {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = m;
+                birthMonthSelect.appendChild(opt);
+            }
+            birthMonthSelect.value = 10; // デフォルト
+
+            // 日: 1〜31
+            const birthDaySelect = document.getElementById('birthDay');
+            for (let d = 1; d <= 31; d++) {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                birthDaySelect.appendChild(opt);
+            }
+            birthDaySelect.value = 6; // デフォルト
+
+            // 起点年: 1950年〜現在年+20年
+            const startYearSelect = document.getElementById('startYear');
+            for (let y = currentYear + 20; y >= 1950; y--) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                startYearSelect.appendChild(opt);
+            }
+            startYearSelect.value = currentYear; // デフォルト
+        }
+
         // 初期化
         document.addEventListener('DOMContentLoaded', async () => {
-            // 現在の年をセット
-            const now = new Date();
-            document.getElementById('startYear').value = now.getFullYear();
+            // プルダウン初期化
+            populateDropdowns();
 
             // サイクルデータを読み込み
             try {
