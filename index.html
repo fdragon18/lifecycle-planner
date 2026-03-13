@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ライフサイクルプランニングシート</title>
-    <!-- v2.9 - レベル削除、グラフ縦線・年ラベル白背景 -->
+    <!-- v3.0 - TC年計算修正（12年周期、グループ共通） -->
     <style>
         * {
             box-sizing: border-box;
@@ -508,15 +508,14 @@
 
         function getTCYears(type60, startYear, endYear) {
             const groupIndex = Math.floor((type60 - 1) / 10);  // 0-5
-            const position = (type60 - 1) % 10;                 // 0-9
 
-            // 基準TC年 = 1900 + グループオフセット + 位置×12
-            const baseTC = 1900 + TC_GROUP_OFFSETS[groupIndex] + position * 12;
+            // グループ基準年（同じグループ内は全員同じTC年）
+            const baseYear = 1900 + TC_GROUP_OFFSETS[groupIndex];
 
-            // 120年周期で繰り返し（10位置 × 12年）
+            // 12年周期で繰り返し
             const tcYears = new Set();
-            for (let year = baseTC; year <= endYear + 120; year += 120) {
-                if (year >= startYear - 120) {
+            for (let year = baseYear; year <= endYear; year += 12) {
+                if (year >= startYear) {
                     tcYears.add(year);
                     tcYears.add(year + 1);  // TC年は2年連続
                 }
