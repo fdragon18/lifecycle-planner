@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ライフサイクルプランニングシート</title>
-    <!-- v4.0 - Supabase認証・検索履歴 -->
+    <!-- v4.1 - 十二運占い機能（外部JSONデータ） -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -852,69 +852,50 @@
             return JUNIUN_NAMES[juniIndex];
         }
 
-        // 十二運の行動様式（説明テキスト）
-        const JUNIUN_DESC = {
-            '長生': {
-                keyword: '成長・発展・誕生',
-                style: '新しいことを始める力、成長意欲が強い。素直で向上心があり、周囲の助けを得やすい。',
-                advice: '学びの姿勢を大切に。新規事業や勉強に適した時期。'
-            },
-            '沐浴': {
-                keyword: '変化・感受性・不安定',
-                style: '感受性が強く、多芸多才。変化を求め、一つに留まりにくい傾向。',
-                advice: '衝動的な行動に注意。自分を見つめ直す時間を持つと良い。'
-            },
-            '冠帯': {
-                keyword: '成人・社交・見栄',
-                style: '社交的で華やかさを好む。自己主張が強く、リーダーシップを発揮。',
-                advice: '見栄を張りすぎず、実力を着実につけること。'
-            },
-            '建禄': {
-                keyword: '独立・自立・安定',
-                style: '自立心が強く、堅実に物事を進める。信頼され、責任ある立場を任される。',
-                advice: '独立独歩の精神で進むと吉。協調性も忘れずに。'
-            },
-            '帝旺': {
-                keyword: '頂点・権威・自信',
-                style: '最も勢いがある状態。自信に満ち、リーダーとして活躍。強い意志と行動力。',
-                advice: '傲慢にならないよう注意。周囲への配慮を忘れずに。'
-            },
-            '衰': {
-                keyword: '円熟・知恵・落ち着き',
-                style: '経験を活かした知恵がある。落ち着いて物事を判断でき、人望を集める。',
-                advice: '若い世代のサポート役が向いている。焦らず着実に。'
-            },
-            '病': {
-                keyword: '内省・繊細・芸術',
-                style: '繊細で感受性豊か。芸術的センスがあり、内面を深める時期。',
-                advice: '無理をせず、心身の健康管理を優先すること。'
-            },
-            '死': {
-                keyword: '終結・静寂・精神性',
-                style: '物質より精神面を重視。執着を手放し、新たな始まりへの準備期間。',
-                advice: '過去を整理し、本当に大切なものを見極める時。'
-            },
-            '墓': {
-                keyword: '蓄積・保守・継承',
-                style: '物事を保存・蓄積する力。伝統を守り、財産を築く能力がある。',
-                advice: '先祖や家族を大切に。貯蓄や不動産に縁がある。'
-            },
-            '絶': {
-                keyword: '無・直感・霊感',
-                style: '直感が鋭く、常識にとらわれない発想ができる。新しい価値を生み出す力。',
-                advice: '型破りなアイデアを活かして。ゼロからの出発に強い。'
-            },
-            '胎': {
-                keyword: '準備・可能性・構想',
-                style: '新しいものが宿る時期。計画を練り、準備を整える段階。',
-                advice: '焦らず計画を温めること。大きな可能性を秘めている。'
-            },
-            '養': {
-                keyword: '育成・保護・依存',
-                style: '周囲のサポートを受けながら成長。穏やかで人に好かれる性質。',
-                advice: '感謝の心を忘れず、周囲との関係を大切に。'
+        // 十二運データ（juniun_data.jsonから読み込み）
+        let JUNIUN_DATA = null;
+
+        // 十二運データを読み込む
+        async function loadJuniUnData() {
+            try {
+                const response = await fetch('juniun_data.json');
+                const data = await response.json();
+                JUNIUN_DATA = {};
+                data['十二運'].forEach(item => {
+                    JUNIUN_DATA[item.name] = {
+                        keyword: item.keyword,
+                        style: item.behavior_style,
+                        advice: item.advice,
+                        description: item.description,
+                        strengths: item.personality.strengths,
+                        weaknesses: item.personality.weaknesses,
+                        suitable_actions: item.suitable_actions,
+                        cautions: item.cautions
+                    };
+                });
+                console.log('十二運データ読み込み完了');
+            } catch (error) {
+                console.error('十二運データ読み込みエラー:', error);
+                // フォールバック用の最小限データ
+                JUNIUN_DATA = {
+                    '長生': { keyword: '成長・発展', style: '新しいことを始める力が強い', advice: '学びの姿勢を大切に' },
+                    '沐浴': { keyword: '変化・感受性', style: '感受性が強く多芸多才', advice: '衝動的な行動に注意' },
+                    '冠帯': { keyword: '社交・見栄', style: '社交的でリーダーシップがある', advice: '実力を着実につける' },
+                    '建禄': { keyword: '独立・自立', style: '自立心が強く堅実', advice: '独立独歩で進む' },
+                    '帝旺': { keyword: '頂点・権威', style: '最も勢いがある', advice: '傲慢にならない' },
+                    '衰': { keyword: '円熟・知恵', style: '経験を活かした知恵がある', advice: '後進のサポートを' },
+                    '病': { keyword: '内省・繊細', style: '繊細で感受性豊か', advice: '無理をしない' },
+                    '死': { keyword: '終結・精神性', style: '精神面を重視', advice: '過去を整理する' },
+                    '墓': { keyword: '蓄積・継承', style: '伝統を守り財産を築く', advice: '先祖を大切に' },
+                    '絶': { keyword: '直感・霊感', style: '常識にとらわれない発想', advice: 'ゼロからの出発に強い' },
+                    '胎': { keyword: '準備・可能性', style: '計画を練り準備する', advice: '焦らず計画を温める' },
+                    '養': { keyword: '育成・保護', style: '穏やかで人に好かれる', advice: '感謝の心を忘れず' }
+                };
             }
-        };
+        }
+
+        // ページ読み込み時に十二運データを読み込む
+        loadJuniUnData();
 
         // 60類型番号 → SP(1-12) マッピング（表示用）
         const SP_TABLE = [
@@ -1489,7 +1470,7 @@
 
             // 占い結果を表示
             const kanshi = getKanshi(typeNumber60);
-            const juniunDesc = JUNIUN_DESC[juniun];
+            const juniunDesc = JUNIUN_DATA[juniun];
             document.getElementById('fortuneSection').style.display = 'block';
             document.getElementById('fortuneKanshi').textContent = kanshi;
             document.getElementById('fortuneJuniun').textContent = juniun;
@@ -1600,7 +1581,7 @@
 
             // 占い結果を表示
             const kanshi = getKanshi(typeNumber60);
-            const juniunDesc = JUNIUN_DESC[juniun];
+            const juniunDesc = JUNIUN_DATA[juniun];
             document.getElementById('fortuneSection').style.display = 'block';
             document.getElementById('fortuneKanshi').textContent = kanshi;
             document.getElementById('fortuneJuniun').textContent = juniun;
