@@ -619,6 +619,10 @@
                         <span id="typeNumber60" class="info-value"></span>
                     </div>
                     <div class="info-item">
+                        <span class="info-label">日干支</span>
+                        <span id="kanshiDisplay" class="info-value"></span>
+                    </div>
+                    <div class="info-item">
                         <span class="info-label">SP</span>
                         <span id="spNumber" class="info-value"></span>
                     </div>
@@ -677,6 +681,21 @@
             12,12,2,9,9,2,12,12,2,9,7,1,6,8,2,9,7,1,6,8,
             4,5,11,3,6,8,4,5,11,3,10,10,3,11,11,3,10,10,3,11
         ];
+
+        // 60類型番号 → 日干支（六十干支）マッピング
+        const KANSHI_TABLE = [
+            '甲子', '乙丑', '丙寅', '丁卯', '戊辰', '己巳', '庚午', '辛未', '壬申', '癸酉',
+            '甲戌', '乙亥', '丙子', '丁丑', '戊寅', '己卯', '庚辰', '辛巳', '壬午', '癸未',
+            '甲申', '乙酉', '丙戌', '丁亥', '戊子', '己丑', '庚寅', '辛卯', '壬辰', '癸巳',
+            '甲午', '乙未', '丙申', '丁酉', '戊戌', '己亥', '庚子', '辛丑', '壬寅', '癸卯',
+            '甲辰', '乙巳', '丙午', '丁未', '戊申', '己酉', '庚戌', '辛亥', '壬子', '癸丑',
+            '甲寅', '乙卯', '丙辰', '丁巳', '戊午', '己未', '庚申', '辛酉', '壬戌', '癸亥'
+        ];
+
+        // 日干支を取得
+        function getKanshi(typeNumber60) {
+            return KANSHI_TABLE[typeNumber60 - 1];
+        }
 
         // 60類型番号 → SP(1-12) マッピング（表示用）
         const SP_TABLE = [
@@ -1242,6 +1261,7 @@
             document.getElementById('infoSection').style.display = 'block';
             document.getElementById('personalityNumber').textContent = personalityNum;
             document.getElementById('typeNumber60').textContent = typeNumber60;
+            document.getElementById('kanshiDisplay').textContent = getKanshi(typeNumber60);
             document.getElementById('spNumber').textContent = sp;
             document.getElementById('currentAge').textContent = `${currentAge}歳`;
             document.getElementById('factionDisplay').textContent = faction;
@@ -1340,6 +1360,7 @@
             document.getElementById('infoSection').style.display = 'block';
             document.getElementById('personalityNumber').textContent = personalityNum;
             document.getElementById('typeNumber60').textContent = typeNumber60;
+            document.getElementById('kanshiDisplay').textContent = getKanshi(typeNumber60);
             document.getElementById('spNumber').textContent = sp;
             document.getElementById('currentAge').textContent = `${currentAge}歳`;
             document.getElementById('factionDisplay').textContent = faction;
