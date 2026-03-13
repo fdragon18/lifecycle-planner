@@ -577,6 +577,23 @@
             return tcYears.has(year);
         }
 
+        // TC月（不安定期）の月を取得
+        // 60類型番号のグループ別に2ヶ月のTC期間がある
+        const TC_MONTH_TABLE = {
+            0: [10, 11],  // 1-10: 10月・11月
+            1: [8, 9],    // 11-20: 8月・9月
+            2: [6, 7],    // 21-30: 6月・7月
+            3: [4, 5],    // 31-40: 4月・5月
+            4: [2, 3],    // 41-50: 2月・3月
+            5: [12, 1]    // 51-60: 12月・1月
+        };
+
+        function isTCMonth(type60, month) {
+            const groupIndex = Math.floor((type60 - 1) / 10);  // 0-5
+            const tcMonths = TC_MONTH_TABLE[groupIndex];
+            return tcMonths.includes(month);
+        }
+
         // プルダウン初期化
         function populateDropdowns() {
             const now = new Date();
@@ -941,7 +958,8 @@
                     cycle: cycle,
                     positive: advice.positive,
                     negative: advice.negative,
-                    isCurrent: (y === currentYearNow && m === currentMonthNow)
+                    isCurrent: (y === currentYearNow && m === currentMonthNow),
+                    isTC: isTCMonth(typeNumber60, m)
                 });
             }
 
@@ -962,8 +980,9 @@
             // ヘッダー
             let headerHTML = '<tr><th class="row-header"></th>';
             months.forEach(m => {
+                const tcCls = m.isTC ? 'tc-year' : '';
                 const curCls = m.isCurrent ? 'current-month' : '';
-                headerHTML += `<th class="month-header ${curCls}">${m.year}年${m.month}月</th>`;
+                headerHTML += `<th class="month-header ${tcCls} ${curCls}">${m.year}年${m.month}月</th>`;
             });
             headerHTML += '</tr>';
             header.innerHTML = headerHTML;
@@ -971,32 +990,36 @@
             // 年齢行
             let ageRowHTML = '<tr class="age-row"><td class="row-header">年齢</td>';
             months.forEach(m => {
+                const tcCls = m.isTC ? 'tc-year' : '';
                 const curCls = m.isCurrent ? 'current-month' : '';
-                ageRowHTML += `<td class="${curCls}">${m.age}歳</td>`;
+                ageRowHTML += `<td class="${tcCls} ${curCls}">${m.age}歳</td>`;
             });
             ageRowHTML += '</tr>';
 
             // サイクル行
             let cycleRowHTML = '<tr><td class="row-header">サイクル</td>';
             months.forEach(m => {
+                const tcCls = m.isTC ? 'tc-year' : '';
                 const curCls = m.isCurrent ? 'current-month' : '';
-                cycleRowHTML += `<td class="cycle-cell cycle-${m.cycle.toLowerCase()} ${curCls}">${m.cycle}</td>`;
+                cycleRowHTML += `<td class="cycle-cell cycle-${m.cycle.toLowerCase()} ${tcCls} ${curCls}">${m.cycle}</td>`;
             });
             cycleRowHTML += '</tr>';
 
             // 良い面
             let positiveRowHTML = '<tr class="advice-row positive-row"><td class="row-header">良い面</td>';
             months.forEach(m => {
+                const tcCls = m.isTC ? 'tc-year' : '';
                 const curCls = m.isCurrent ? 'current-month' : '';
-                positiveRowHTML += `<td class="${curCls}">${m.positive}</td>`;
+                positiveRowHTML += `<td class="${tcCls} ${curCls}">${m.positive}</td>`;
             });
             positiveRowHTML += '</tr>';
 
             // 注意点
             let negativeRowHTML = '<tr class="advice-row negative-row"><td class="row-header">注意点</td>';
             months.forEach(m => {
+                const tcCls = m.isTC ? 'tc-year' : '';
                 const curCls = m.isCurrent ? 'current-month' : '';
-                negativeRowHTML += `<td class="${curCls}">${m.negative}</td>`;
+                negativeRowHTML += `<td class="${tcCls} ${curCls}">${m.negative}</td>`;
             });
             negativeRowHTML += '</tr>';
 
@@ -1031,8 +1054,28 @@
                 cycle: m.cycle,
                 year: m.year,
                 month: m.month,
-                isCurrent: m.isCurrent
+                isCurrent: m.isCurrent,
+                isTC: m.isTC
             }));
+
+            // TC月の背景帯を描画（赤）
+            points.forEach((p, i) => {
+                if (p.isTC) {
+                    ctx.fillStyle = 'rgba(244, 67, 54, 0.15)';
+                    let x, w;
+                    if (i === 0) {
+                        x = padding.left;
+                        w = stepWidth / 2;
+                    } else if (i === points.length - 1) {
+                        x = p.x - stepWidth / 2;
+                        w = stepWidth / 2 + padding.right;
+                    } else {
+                        x = p.x - stepWidth / 2;
+                        w = stepWidth;
+                    }
+                    ctx.fillRect(x, padding.top, w, chartHeight);
+                }
+            });
 
             // チャートエリアの枠
             ctx.strokeStyle = '#ccc';
