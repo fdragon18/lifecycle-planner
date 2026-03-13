@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ライフサイクルプランニングシート</title>
-    <!-- v2.8 - TC年（不安定期）ハイライト機能追加 -->
+    <!-- v2.9 - レベル削除、グラフ縦線・年ラベル白背景 -->
     <style>
         * {
             box-sizing: border-box;
@@ -430,10 +430,6 @@
                         <span class="info-label">年齢:</span>
                         <span id="currentAge" class="info-value"></span>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">レベル:</span>
-                        <span id="levelDisplay" class="info-value"></span>
-                    </div>
                 </div>
             </div>
 
@@ -762,7 +758,6 @@
             document.getElementById('spNumber').textContent = sp;
             document.getElementById('currentAge').textContent = `${currentAge}歳`;
             document.getElementById('factionDisplay').textContent = faction;
-            document.getElementById('levelDisplay').textContent = currentCycleInfo.level;
 
             const typeDisplay = document.getElementById('typeDisplay');
             const baseType = typeCode.charAt(0);
@@ -890,7 +885,7 @@
                 isCurrent: y.isCurrent
             }));
 
-            // グリッド線
+            // 横グリッド線
             ctx.strokeStyle = '#e0e0e0';
             ctx.lineWidth = 1;
             for (let i = 0; i <= 10; i++) {
@@ -900,6 +895,14 @@
                 ctx.lineTo(width - padding.right, y);
                 ctx.stroke();
             }
+
+            // 縦グリッド線
+            points.forEach(p => {
+                ctx.beginPath();
+                ctx.moveTo(p.x, padding.top);
+                ctx.lineTo(p.x, padding.top + chartHeight);
+                ctx.stroke();
+            });
 
             // Y軸ラベル
             ctx.fillStyle = '#666';
@@ -930,6 +933,10 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
             });
+
+            // X軸ラベル背景（白枠）
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, height - padding.bottom + 5, width, padding.bottom - 5);
 
             // X軸ラベル（サイクル文字）
             ctx.fillStyle = '#333';
