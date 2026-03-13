@@ -897,8 +897,8 @@
         // ページ読み込み時に十二運データを読み込む
         loadJuniUnData();
 
-        // 60類型番号 → SP(1-12) マッピング（表示用）
-        const SP_TABLE = [
+        // 60類型番号 → 副個性番号(1-12) マッピング（表示用）
+        const SUBPERSONAL_TABLE = [
             7,2,8,5,4,6,9,1,10,11,2,12,11,4,6,7,1,8,7,2,
             8,5,3,10,9,1,10,11,2,12,5,3,6,7,1,8,11,4,12,9,
             3,10,9,1,8,5,4,6,5,3,6,7,2,12,11,4,12,9,3,10
@@ -1295,7 +1295,7 @@
             // 基本情報を計算
             const typeNumber60 = calculate60TypeNumber(birthYear, birthMonth, birthDay);
             const personalityNumber = getPersonalityNumber(typeNumber60);
-            const sp = typeNumber60 % 10 || 10;
+            const subPersonal = getSubPersonal(typeNumber60);
             const faction = (personalityNumber % 2 === 1) ? '楽観派' : '慎重派';
             const typeCode = TYPE_MAPPING[personalityNumber];
             const kanshi = getKanshi(typeNumber60);
@@ -1305,7 +1305,7 @@
             document.getElementById('personalityNumber').textContent = personalityNumber;
             document.getElementById('typeNumber60').textContent = typeNumber60;
             document.getElementById('kanshiDisplay').textContent = kanshi;
-            document.getElementById('spNumber').textContent = sp;
+            document.getElementById('spNumber').textContent = subPersonal;
             document.getElementById('juniunDisplay').textContent = juniun;
             document.getElementById('factionDisplay').textContent = faction;
 
@@ -1327,6 +1327,7 @@
 
             // 基本情報セクションを表示
             document.getElementById('infoSection').style.display = 'block';
+            applyPersonalityColors(personalityNumber);
 
             // 占い結果を表示
             if (JUNIUN_DATA) {
@@ -1444,11 +1445,25 @@
                 fortuneSection.style.background = colors.background;
                 fortuneSection.style.borderLeft = `4px solid ${colors.border}`;
             }
+
+            // fortune-juniun内部もテーマカラーに合わせる
+            const fortuneJuniun = document.querySelector('.fortune-juniun');
+            const fortuneJuniuName = document.getElementById('fortuneJuniun');
+            const fortuneKeyword = document.querySelector('.fortune-keyword');
+            if (fortuneJuniun) {
+                fortuneJuniun.style.background = colors.accent;
+            }
+            if (fortuneJuniuName) {
+                fortuneJuniuName.style.color = colors.border;
+            }
+            if (fortuneKeyword) {
+                fortuneKeyword.style.color = colors.border;
+            }
         }
 
-        // SP値を取得（表示用、SP_TABLEから）
-        function getSP(typeNumber60) {
-            return SP_TABLE[typeNumber60 - 1];
+        // 副個性番号を取得（表示用、SUBPERSONAL_TABLEから）
+        function getSubPersonal(typeNumber60) {
+            return SUBPERSONAL_TABLE[typeNumber60 - 1];
         }
 
         // サイクル計算用SP（60類型番号の下1桁、0の場合は10）
@@ -1553,8 +1568,8 @@
             // 個性番号を取得
             const personalityNum = getPersonalityNumber(typeNumber60);
 
-            // SP値を取得（1-12、表示用）
-            const sp = getSP(typeNumber60);
+            // 副個性番号を取得（1-12、表示用）
+            const subPersonal = getSubPersonal(typeNumber60);
 
             // サイクル順序決定用SP（1-10）: 60類型番号の下1桁
             const spForCycle = getSPForCycle(typeNumber60);
@@ -1577,7 +1592,7 @@
             document.getElementById('personalityNumber').textContent = personalityNum;
             document.getElementById('typeNumber60').textContent = typeNumber60;
             document.getElementById('kanshiDisplay').textContent = getKanshi(typeNumber60);
-            document.getElementById('spNumber').textContent = sp;
+            document.getElementById('spNumber').textContent = subPersonal;
             const juniun = getJuniun(typeNumber60);
             document.getElementById('juniunDisplay').textContent = juniun;
             document.getElementById('currentAge').textContent = `${currentAge}歳`;
@@ -1599,7 +1614,7 @@
             typeDisplay.className = 'type-badge type-' + baseType.toLowerCase();
 
             // デバッグ情報（コンソール）
-            console.log('60類型番号:', typeNumber60, '個性番号:', personalityNum, 'SP(表示):', sp, 'SP(cycle):', spForCycle, 'タイプ:', typeCode);
+            console.log('60類型番号:', typeNumber60, '個性番号:', personalityNum, '副個性:', subPersonal, 'cycleSP:', spForCycle, 'タイプ:', typeCode);
 
             // 表示期間数を取得
             const displayCount = parseInt(document.getElementById('displayCount').value);
@@ -1671,8 +1686,8 @@
             // 個性番号を取得
             const personalityNum = getPersonalityNumber(typeNumber60);
 
-            // SP値を取得（表示用）
-            const sp = getSP(typeNumber60);
+            // 副個性番号を取得（表示用）
+            const subPersonal = getSubPersonal(typeNumber60);
 
             // 現在の年齢
             const currentAge = calculateAge(birthYear, birthMonth, birthDay, startYear, startMonth);
@@ -1689,7 +1704,7 @@
             document.getElementById('personalityNumber').textContent = personalityNum;
             document.getElementById('typeNumber60').textContent = typeNumber60;
             document.getElementById('kanshiDisplay').textContent = getKanshi(typeNumber60);
-            document.getElementById('spNumber').textContent = sp;
+            document.getElementById('spNumber').textContent = subPersonal;
             const juniun = getJuniun(typeNumber60);
             document.getElementById('juniunDisplay').textContent = juniun;
             document.getElementById('currentAge').textContent = `${currentAge}歳`;
