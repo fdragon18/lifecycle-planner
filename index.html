@@ -512,6 +512,106 @@
             font-size: 14px;
             width: 120px;
         }
+
+        /* Fortune Section */
+        .fortune-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .fortune-title {
+            font-weight: bold;
+            color: #9c27b0;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .fortune-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .fortune-kanshi {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .fortune-kanshi-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .fortune-kanshi-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .fortune-juniun {
+            background: #f3e5f5;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .fortune-juniun-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+
+        .fortune-juniun-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #7b1fa2;
+        }
+
+        .fortune-keyword {
+            font-size: 14px;
+            color: #9c27b0;
+            background: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .fortune-juniun-body {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .fortune-label {
+            font-size: 12px;
+            color: #7b1fa2;
+            font-weight: bold;
+        }
+
+        .fortune-style p,
+        .fortune-advice p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .fortune-section {
+                padding: 15px;
+            }
+
+            .fortune-kanshi-value {
+                font-size: 20px;
+            }
+
+            .fortune-juniun-name {
+                font-size: 18px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -627,8 +727,38 @@
                         <span id="spNumber" class="info-value"></span>
                     </div>
                     <div class="info-item">
+                        <span class="info-label">十二運</span>
+                        <span id="juniunDisplay" class="info-value" style="color: #9c27b0;"></span>
+                    </div>
+                    <div class="info-item">
                         <span class="info-label">年齢</span>
                         <span id="currentAge" class="info-value"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="fortuneSection" class="fortune-section" style="display:none;">
+                <div class="fortune-title">日干支占い</div>
+                <div class="fortune-content">
+                    <div class="fortune-kanshi">
+                        <span class="fortune-kanshi-label">日干支</span>
+                        <span id="fortuneKanshi" class="fortune-kanshi-value"></span>
+                    </div>
+                    <div class="fortune-juniun">
+                        <div class="fortune-juniun-header">
+                            <span id="fortuneJuniun" class="fortune-juniun-name"></span>
+                            <span id="fortuneKeyword" class="fortune-keyword"></span>
+                        </div>
+                        <div class="fortune-juniun-body">
+                            <div class="fortune-style">
+                                <span class="fortune-label">行動様式</span>
+                                <p id="fortuneStyle"></p>
+                            </div>
+                            <div class="fortune-advice">
+                                <span class="fortune-label">アドバイス</span>
+                                <p id="fortuneAdvice"></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -696,6 +826,95 @@
         function getKanshi(typeNumber60) {
             return KANSHI_TABLE[typeNumber60 - 1];
         }
+
+        // 十二運名称
+        const JUNIUN_NAMES = ['長生', '沐浴', '冠帯', '建禄', '帝旺', '衰', '病', '死', '墓', '絶', '胎', '養'];
+
+        // 各日干の長生位置（支のインデックス）
+        // 甲=亥(11), 乙=午(6), 丙=寅(2), 丁=酉(9), 戊=寅(2), 己=酉(9), 庚=巳(5), 辛=子(0), 壬=申(8), 癸=卯(3)
+        const CHOSEI_POSITION = [11, 6, 2, 9, 2, 9, 5, 0, 8, 3];
+
+        // 十二運を取得（日干と日支から計算）
+        function getJuniun(typeNumber60) {
+            const kanIndex = (typeNumber60 - 1) % 10;  // 0=甲, 1=乙, ...
+            const shiIndex = (typeNumber60 - 1) % 12;  // 0=子, 1=丑, ...
+            const choseiPos = CHOSEI_POSITION[kanIndex];
+            const isYang = kanIndex % 2 === 0;  // 陽干（甲丙戊庚壬）
+
+            let juniIndex;
+            if (isYang) {
+                // 陽干は順回り
+                juniIndex = (shiIndex - choseiPos + 12) % 12;
+            } else {
+                // 陰干は逆回り
+                juniIndex = (choseiPos - shiIndex + 12) % 12;
+            }
+            return JUNIUN_NAMES[juniIndex];
+        }
+
+        // 十二運の行動様式（説明テキスト）
+        const JUNIUN_DESC = {
+            '長生': {
+                keyword: '成長・発展・誕生',
+                style: '新しいことを始める力、成長意欲が強い。素直で向上心があり、周囲の助けを得やすい。',
+                advice: '学びの姿勢を大切に。新規事業や勉強に適した時期。'
+            },
+            '沐浴': {
+                keyword: '変化・感受性・不安定',
+                style: '感受性が強く、多芸多才。変化を求め、一つに留まりにくい傾向。',
+                advice: '衝動的な行動に注意。自分を見つめ直す時間を持つと良い。'
+            },
+            '冠帯': {
+                keyword: '成人・社交・見栄',
+                style: '社交的で華やかさを好む。自己主張が強く、リーダーシップを発揮。',
+                advice: '見栄を張りすぎず、実力を着実につけること。'
+            },
+            '建禄': {
+                keyword: '独立・自立・安定',
+                style: '自立心が強く、堅実に物事を進める。信頼され、責任ある立場を任される。',
+                advice: '独立独歩の精神で進むと吉。協調性も忘れずに。'
+            },
+            '帝旺': {
+                keyword: '頂点・権威・自信',
+                style: '最も勢いがある状態。自信に満ち、リーダーとして活躍。強い意志と行動力。',
+                advice: '傲慢にならないよう注意。周囲への配慮を忘れずに。'
+            },
+            '衰': {
+                keyword: '円熟・知恵・落ち着き',
+                style: '経験を活かした知恵がある。落ち着いて物事を判断でき、人望を集める。',
+                advice: '若い世代のサポート役が向いている。焦らず着実に。'
+            },
+            '病': {
+                keyword: '内省・繊細・芸術',
+                style: '繊細で感受性豊か。芸術的センスがあり、内面を深める時期。',
+                advice: '無理をせず、心身の健康管理を優先すること。'
+            },
+            '死': {
+                keyword: '終結・静寂・精神性',
+                style: '物質より精神面を重視。執着を手放し、新たな始まりへの準備期間。',
+                advice: '過去を整理し、本当に大切なものを見極める時。'
+            },
+            '墓': {
+                keyword: '蓄積・保守・継承',
+                style: '物事を保存・蓄積する力。伝統を守り、財産を築く能力がある。',
+                advice: '先祖や家族を大切に。貯蓄や不動産に縁がある。'
+            },
+            '絶': {
+                keyword: '無・直感・霊感',
+                style: '直感が鋭く、常識にとらわれない発想ができる。新しい価値を生み出す力。',
+                advice: '型破りなアイデアを活かして。ゼロからの出発に強い。'
+            },
+            '胎': {
+                keyword: '準備・可能性・構想',
+                style: '新しいものが宿る時期。計画を練り、準備を整える段階。',
+                advice: '焦らず計画を温めること。大きな可能性を秘めている。'
+            },
+            '養': {
+                keyword: '育成・保護・依存',
+                style: '周囲のサポートを受けながら成長。穏やかで人に好かれる性質。',
+                advice: '感謝の心を忘れず、周囲との関係を大切に。'
+            }
+        };
 
         // 60類型番号 → SP(1-12) マッピング（表示用）
         const SP_TABLE = [
@@ -1263,8 +1482,20 @@
             document.getElementById('typeNumber60').textContent = typeNumber60;
             document.getElementById('kanshiDisplay').textContent = getKanshi(typeNumber60);
             document.getElementById('spNumber').textContent = sp;
+            const juniun = getJuniun(typeNumber60);
+            document.getElementById('juniunDisplay').textContent = juniun;
             document.getElementById('currentAge').textContent = `${currentAge}歳`;
             document.getElementById('factionDisplay').textContent = faction;
+
+            // 占い結果を表示
+            const kanshi = getKanshi(typeNumber60);
+            const juniunDesc = JUNIUN_DESC[juniun];
+            document.getElementById('fortuneSection').style.display = 'block';
+            document.getElementById('fortuneKanshi').textContent = kanshi;
+            document.getElementById('fortuneJuniun').textContent = juniun;
+            document.getElementById('fortuneKeyword').textContent = juniunDesc.keyword;
+            document.getElementById('fortuneStyle').textContent = juniunDesc.style;
+            document.getElementById('fortuneAdvice').textContent = juniunDesc.advice;
 
             const typeDisplay = document.getElementById('typeDisplay');
             const baseType = typeCode.charAt(0);
@@ -1362,8 +1593,20 @@
             document.getElementById('typeNumber60').textContent = typeNumber60;
             document.getElementById('kanshiDisplay').textContent = getKanshi(typeNumber60);
             document.getElementById('spNumber').textContent = sp;
+            const juniun = getJuniun(typeNumber60);
+            document.getElementById('juniunDisplay').textContent = juniun;
             document.getElementById('currentAge').textContent = `${currentAge}歳`;
             document.getElementById('factionDisplay').textContent = faction;
+
+            // 占い結果を表示
+            const kanshi = getKanshi(typeNumber60);
+            const juniunDesc = JUNIUN_DESC[juniun];
+            document.getElementById('fortuneSection').style.display = 'block';
+            document.getElementById('fortuneKanshi').textContent = kanshi;
+            document.getElementById('fortuneJuniun').textContent = juniun;
+            document.getElementById('fortuneKeyword').textContent = juniunDesc.keyword;
+            document.getElementById('fortuneStyle').textContent = juniunDesc.style;
+            document.getElementById('fortuneAdvice').textContent = juniunDesc.advice;
 
             const typeDisplay = document.getElementById('typeDisplay');
             const baseType = typeCode.charAt(0);
