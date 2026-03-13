@@ -413,10 +413,20 @@
             7: 'A★', 8: 'A☆', 9: 'F★', 10: 'F☆', 11: 'M★', 12: 'M☆'
         };
 
-        // 注: 以前はSP別サイクル順序テーブルを使用していたが、
-        // VBA解析により以下の計算式で統一できることが判明:
-        // cycleIndex = (年の末尾 + SP_for_cycle + 2) % 10
-        // cycle = FIXED_CYCLE_ORDER[cycleIndex]
+        // SP(1-10)別サイクル順序テーブル
+        // VBAのライフサイクルマスタから抽出
+        const SP_CYCLE_ORDER = {
+            1: ['X', 'Z', 'B', 'D', 'E', 'A', 'C', 'Y', 'G', 'F'],
+            2: ['F', 'B', 'Z', 'E', 'D', 'C', 'A', 'G', 'Y', 'X'],
+            3: ['G', 'F', 'X', 'Z', 'B', 'D', 'E', 'A', 'C', 'Y'],
+            4: ['Y', 'X', 'F', 'B', 'Z', 'E', 'D', 'C', 'A', 'G'],
+            5: ['C', 'Y', 'G', 'F', 'X', 'Z', 'B', 'D', 'E', 'A'],
+            6: ['A', 'G', 'Y', 'X', 'F', 'B', 'Z', 'E', 'D', 'C'],
+            7: ['E', 'A', 'C', 'Y', 'G', 'F', 'X', 'Z', 'B', 'D'],
+            8: ['D', 'C', 'A', 'G', 'Y', 'X', 'F', 'B', 'Z', 'E'],
+            9: ['B', 'D', 'E', 'A', 'C', 'Y', 'G', 'F', 'X', 'Z'],
+            10: ['Z', 'E', 'D', 'C', 'A', 'G', 'Y', 'X', 'F', 'B']
+        };
 
         // 初期化
         document.addEventListener('DOMContentLoaded', async () => {
@@ -503,7 +513,7 @@
             return (personalityNum % 2 === 1) ? '楽観派' : '慎重派';
         }
 
-        // 年のサイクルを計算（VBA解析による正確な計算式）
+        // 年のサイクルを計算（SP別テーブル参照）
         function calculateYearlyCycle(spForCycle, startYear, targetYear) {
             // 起点年からの経過年数を計算
             const yearsElapsed = targetYear - startYear;
@@ -511,13 +521,13 @@
             // レベルは経過年数の3分割（10年ごとにレベルが変わる）
             const level = (Math.floor(Math.abs(yearsElapsed) / 10) % 3) + 1;
 
-            // サイクルインデックス計算: (年の末尾 + SP + 2) % 10
-            // VBA解析により導出された式
+            // サイクルインデックス: 年の末尾 + 4（VBA検証結果）
             const yearLastDigit = targetYear % 10;
-            const cycleIndex = (yearLastDigit + spForCycle + 2) % 10;
+            const cycleIndex = (yearLastDigit + 4) % 10;
 
-            // 固定順序からサイクル文字を取得
-            const cycle = FIXED_CYCLE_ORDER[cycleIndex];
+            // SP別テーブルからサイクル文字を取得
+            const cycleOrder = SP_CYCLE_ORDER[spForCycle] || SP_CYCLE_ORDER[1];
+            const cycle = cycleOrder[cycleIndex];
 
             return {
                 cycle: cycle,
@@ -577,8 +587,8 @@
             // SP値を取得（1-12、表示用）
             const sp = getSP(typeNumber60);
 
-            // サイクル順序決定用SP（1-10）: VBA解析により類型番号から直接計算
-            const spForCycle = typeNumber60 % 10 || 10;
+            // サイクル順序決定用SP（1-10）: SP値から計算
+            const spForCycle = sp % 10 || 10;
 
             // 現在の年齢を計算（年分析なので起点年の1月時点）
             const currentAge = calculateAge(birthYear, birthMonth, birthDay, startYear, 1);
@@ -596,7 +606,7 @@
             document.getElementById('infoSection').style.display = 'block';
             document.getElementById('personalityNumber').textContent = personalityNum;
             document.getElementById('typeNumber60').textContent = typeNumber60;
-            document.getElementById('spNumber').textContent = spForCycle;
+            document.getElementById('spNumber').textContent = sp;
             document.getElementById('currentAge').textContent = `${currentAge}歳`;
             document.getElementById('factionDisplay').textContent = faction;
             document.getElementById('levelDisplay').textContent = currentCycleInfo.level;
