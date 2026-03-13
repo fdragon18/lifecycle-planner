@@ -1391,6 +1391,51 @@
             return PERSONALITY_TABLE[typeNumber60 - 1];
         }
 
+        // 個性番号からテーマカラーを取得
+        // F(1-4): 緑, A(5-8): 赤, M(9-12): 青
+        // 奇数: 楽観派（明るめ）, 偶数: 慎重派（暗め）
+        // 境界番号は隣接タイプの色を少し混ぜる
+        function getPersonalityColors(personalityNum) {
+            // ベースHue: 緑=140, 赤=0, 青=210
+            const colorMap = {
+                1:  { h: 150, s: 55, l: 92 },  // F★ 緑+少し青味
+                2:  { h: 140, s: 50, l: 87 },  // F☆ 緑
+                3:  { h: 140, s: 55, l: 92 },  // F★ 緑（中間は純粋）
+                4:  { h: 120, s: 50, l: 87 },  // F☆ 緑+少し赤味方向
+                5:  { h: 15,  s: 60, l: 93 },  // A★ 赤+少し緑味
+                6:  { h: 0,   s: 55, l: 88 },  // A☆ 赤
+                7:  { h: 0,   s: 60, l: 93 },  // A★ 赤（中間は純粋）
+                8:  { h: 340, s: 55, l: 88 },  // A☆ 赤+少し青味
+                9:  { h: 230, s: 60, l: 93 },  // M★ 青+少し赤味
+                10: { h: 210, s: 55, l: 88 },  // M☆ 青
+                11: { h: 210, s: 60, l: 93 },  // M★ 青（中間は純粋）
+                12: { h: 190, s: 55, l: 88 }   // M☆ 青+少し緑味
+            };
+
+            const c = colorMap[personalityNum] || { h: 0, s: 0, l: 95 };
+            return {
+                background: `hsl(${c.h}, ${c.s}%, ${c.l}%)`,
+                border: `hsl(${c.h}, ${c.s + 10}%, ${c.l - 25}%)`,
+                accent: `hsl(${c.h}, ${c.s + 5}%, ${c.l - 10}%)`
+            };
+        }
+
+        // info-sectionとfortune-sectionにテーマカラーを適用
+        function applyPersonalityColors(personalityNum) {
+            const colors = getPersonalityColors(personalityNum);
+            const infoSection = document.getElementById('infoSection');
+            const fortuneSection = document.getElementById('fortuneSection');
+
+            if (infoSection) {
+                infoSection.style.background = colors.background;
+                infoSection.style.borderLeft = `4px solid ${colors.border}`;
+            }
+            if (fortuneSection) {
+                fortuneSection.style.background = colors.background;
+                fortuneSection.style.borderLeft = `4px solid ${colors.border}`;
+            }
+        }
+
         // SP値を取得（表示用、SP_TABLEから）
         function getSP(typeNumber60) {
             return SP_TABLE[typeNumber60 - 1];
@@ -1518,6 +1563,7 @@
 
             // 情報を表示
             document.getElementById('infoSection').style.display = 'block';
+            applyPersonalityColors(personalityNum);
             document.getElementById('personalityNumber').textContent = personalityNum;
             document.getElementById('typeNumber60').textContent = typeNumber60;
             document.getElementById('kanshiDisplay').textContent = getKanshi(typeNumber60);
@@ -1629,6 +1675,7 @@
 
             // 情報を表示
             document.getElementById('infoSection').style.display = 'block';
+            applyPersonalityColors(personalityNum);
             document.getElementById('personalityNumber').textContent = personalityNum;
             document.getElementById('typeNumber60').textContent = typeNumber60;
             document.getElementById('kanshiDisplay').textContent = getKanshi(typeNumber60);
