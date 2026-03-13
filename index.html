@@ -866,22 +866,24 @@
 
             // Canvas サイズ設定
             canvas.width = container.offsetWidth;
-            canvas.height = 280;
+            canvas.height = 320;
 
             const width = canvas.width;
             const height = canvas.height;
-            const padding = { top: 30, right: 40, bottom: 50, left: 50 };
+            const padding = { top: 30, right: 40, bottom: 70, left: 50 };
             const chartWidth = width - padding.left - padding.right;
             const chartHeight = height - padding.top - padding.bottom;
 
-            // クリア
-            ctx.clearRect(0, 0, width, height);
+            // 背景を白でクリア
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, width, height);
 
             // Y軸の範囲
             const yMin = 0;
             const yMax = 10;
 
             // データポイント
+            const stepWidth = chartWidth / (years.length - 1);
             const points = years.map((y, i) => ({
                 x: padding.left + (i / (years.length - 1)) * chartWidth,
                 y: padding.top + chartHeight - ((CYCLE_VALUES[y.cycle] || 5) / yMax) * chartHeight,
@@ -891,19 +893,22 @@
                 isTC: y.isTC
             }));
 
-            // TC年の背景帯を描画
-            const stepWidth = chartWidth / (years.length - 1);
+            // TC年の背景帯を描画（赤）
             points.forEach((p, i) => {
                 if (p.isTC) {
-                    ctx.fillStyle = 'rgba(255, 193, 7, 0.2)';
-                    const x = p.x - stepWidth / 2;
-                    const w = stepWidth;
-                    ctx.fillRect(
-                        Math.max(padding.left, x),
-                        padding.top,
-                        i === 0 ? w / 2 : (i === points.length - 1 ? w / 2 : w),
-                        chartHeight
-                    );
+                    ctx.fillStyle = 'rgba(244, 67, 54, 0.15)';
+                    let x, w;
+                    if (i === 0) {
+                        x = padding.left;
+                        w = stepWidth / 2;
+                    } else if (i === points.length - 1) {
+                        x = p.x - stepWidth / 2;
+                        w = stepWidth / 2 + padding.right;
+                    } else {
+                        x = p.x - stepWidth / 2;
+                        w = stepWidth;
+                    }
+                    ctx.fillRect(x, padding.top, w, chartHeight);
                 }
             });
 
@@ -955,10 +960,6 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
             });
-
-            // X軸ラベル背景（白枠）
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, height - padding.bottom + 5, width, padding.bottom - 5);
 
             // X軸ラベル（サイクル文字）
             ctx.fillStyle = '#333';
