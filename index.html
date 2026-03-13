@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ライフサイクルプランニングシート</title>
-    <!-- v2.6 - サイクルテーブルを列K以降から正しく抽出 -->
+    <!-- v2.7 - SP計算を修正（60類型番号の下1桁） -->
     <style>
         * {
             box-sizing: border-box;
@@ -471,12 +471,8 @@
             4,5,11,3,6,8,4,5,11,3,10,10,3,11,11,3,10,10,3,11
         ];
 
-        // 60類型番号 → SP(1-12) マッピング
-        const SP_TABLE = [
-            7,2,8,5,4,6,9,1,10,11,2,12,11,4,6,7,1,8,7,2,
-            8,5,3,10,9,1,10,11,2,12,5,3,6,7,1,8,11,4,12,9,
-            3,10,9,1,8,5,4,6,5,3,6,7,2,12,11,4,12,9,3,10
-        ];
+        // SP = 60類型番号の下1桁（ExcelのRIGHT(G3,1)に相当）
+        // 60類型番号が10,20,30...の場合は10として扱う
 
         // 個性番号 → タイプ マッピング
         // F=前進型, A=調和型, M=堅実型
@@ -604,9 +600,10 @@
             return PERSONALITY_TABLE[typeNumber60 - 1];
         }
 
-        // SP値を取得（60類型番号からテーブル参照、1-12）
+        // SP値を取得（60類型番号の下1桁、0の場合は10）
         function getSP(typeNumber60) {
-            return SP_TABLE[typeNumber60 - 1];
+            const lastDigit = typeNumber60 % 10;
+            return lastDigit === 0 ? 10 : lastDigit;
         }
 
         // サイクル順序決定用SP（1-10）
