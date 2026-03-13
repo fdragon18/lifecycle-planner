@@ -132,6 +132,10 @@
             transform: translateY(-2px);
         }
 
+        .btn-month {
+            background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+        }
+
         .info-section {
             background: white;
             border-radius: 16px;
@@ -403,12 +407,27 @@
                     </div>
 
                     <div class="input-group">
-                        <label>起点年:</label>
+                        <label>起点:</label>
                         <select id="startYear"></select>
                         <span>年</span>
+                        <select id="startMonth"></select>
+                        <span>月</span>
                     </div>
 
+                    <div class="input-group">
+                        <label>表示:</label>
+                        <select id="displayCount">
+                            <option value="6">6</option>
+                            <option value="8">8</option>
+                            <option value="10" selected>10</option>
+                            <option value="12">12</option>
+                        </select>
+                        <span>期間</span>
+                    </div>
+                </div>
+                <div class="input-row" style="margin-top: 15px;">
                     <button class="btn-analyze" onclick="analyze()">年分析</button>
+                    <button class="btn-analyze btn-month" onclick="analyzeMonth()">月分析</button>
                 </div>
             </div>
 
@@ -503,6 +522,7 @@
         // SP別サイクルテーブル（Excelライフサイクルマスタ（年）列K以降から抽出）
         // キー: SP % 10
         // 値: 2026年（末尾6）から始まる10年分のサイクル
+        // 年サイクルテーブル（SP別、年末尾で参照）
         const SP_CYCLE_TABLE = {
             1: ['C', 'D', 'E', 'F', 'G', 'X', 'Y', 'Z', 'A', 'B'],  // SP=1,11
             2: ['D', 'C', 'F', 'E', 'X', 'G', 'Z', 'Y', 'B', 'A'],  // SP=2,12
@@ -514,6 +534,20 @@
             8: ['X', 'G', 'Z', 'Y', 'B', 'A', 'D', 'C', 'F', 'E'],  // SP=8
             9: ['E', 'F', 'G', 'X', 'Y', 'Z', 'A', 'B', 'C', 'D'],  // SP=9
             0: ['F', 'E', 'X', 'G', 'Z', 'Y', 'B', 'A', 'D', 'C']   // SP=10
+        };
+
+        // 月サイクルテーブル（60類型番号の下1桁別）
+        const SP_CYCLE_TABLE_MONTH = {
+            0: ['E', 'X', 'G', 'Z', 'Y', 'B', 'A', 'D', 'C', 'F'],
+            1: ['D', 'E', 'F', 'G', 'X', 'Y', 'Z', 'A', 'B', 'C'],
+            2: ['C', 'F', 'E', 'X', 'G', 'Z', 'Y', 'B', 'A', 'D'],
+            3: ['B', 'C', 'D', 'E', 'F', 'G', 'X', 'Y', 'Z', 'A'],
+            4: ['A', 'D', 'C', 'F', 'E', 'X', 'G', 'Z', 'Y', 'B'],
+            5: ['Z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'X', 'Y'],
+            6: ['Y', 'B', 'A', 'D', 'C', 'F', 'E', 'X', 'G', 'Z'],
+            7: ['X', 'Y', 'Z', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
+            8: ['G', 'Z', 'Y', 'B', 'A', 'D', 'C', 'F', 'E', 'X'],
+            9: ['F', 'G', 'X', 'Y', 'Z', 'A', 'B', 'C', 'D', 'E']
         };
 
         // TC年（不安定期）計算
@@ -586,6 +620,16 @@
                 startYearSelect.appendChild(opt);
             }
             startYearSelect.value = currentYear; // デフォルト
+
+            // 起点月: 1〜12
+            const startMonthSelect = document.getElementById('startMonth');
+            for (let m = 1; m <= 12; m++) {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = m;
+                startMonthSelect.appendChild(opt);
+            }
+            startMonthSelect.value = now.getMonth() + 1; // 今月
         }
 
         // 初期化
@@ -779,11 +823,14 @@
             // デバッグ情報（コンソール）
             console.log('60類型番号:', typeNumber60, '個性番号:', personalityNum, 'SP(表示):', sp, 'SP(cycle):', spForCycle, 'タイプ:', typeCode);
 
-            // 10年分のデータを生成
+            // 表示期間数を取得
+            const displayCount = parseInt(document.getElementById('displayCount').value);
+
+            // 年データを生成
             const years = [];
             const currentYearNow = new Date().getFullYear();
 
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < displayCount; i++) {
                 const y = startYear + i;
                 const age = calculateAge(birthYear, birthMonth, birthDay, y, birthMonth);
                 const cycleInfo = calculateYearlyCycle(spForCycle, startYear, y);
@@ -808,6 +855,258 @@
             // グラフを生成（レイアウト計算後に描画）
             document.getElementById('graphSection').style.display = 'block';
             setTimeout(() => renderLifecycleChart(years), 50);
+        }
+
+        // 月サイクルを計算
+        function calculateMonthlyCycle(typeNumber60, startYear, startMonth, targetYear, targetMonth) {
+            // 60類型番号の下1桁でテーブル行を決定
+            const spKey = typeNumber60 % 10;
+            const baseCycles = SP_CYCLE_TABLE_MONTH[spKey];
+
+            // 起点月からの経過月数を計算
+            const startTotal = startYear * 12 + startMonth;
+            const targetTotal = targetYear * 12 + targetMonth;
+            const monthsElapsed = targetTotal - startTotal;
+
+            // 10ヶ月周期でインデックスを計算
+            const cycleIndex = ((monthsElapsed % 10) + 10) % 10;
+            return baseCycles[cycleIndex];
+        }
+
+        // 月分析
+        function analyzeMonth() {
+            const birthYear = parseInt(document.getElementById('birthYear').value);
+            const birthMonth = parseInt(document.getElementById('birthMonth').value);
+            const birthDay = parseInt(document.getElementById('birthDay').value);
+            const startYear = parseInt(document.getElementById('startYear').value);
+            const startMonth = parseInt(document.getElementById('startMonth').value);
+
+            if (!birthYear || !birthMonth || !birthDay || !startYear || !startMonth) {
+                alert('すべての項目を入力してください');
+                return;
+            }
+
+            // 60類型番号を計算
+            const typeNumber60 = calculate60TypeNumber(birthYear, birthMonth, birthDay);
+
+            // 個性番号を取得
+            const personalityNum = getPersonalityNumber(typeNumber60);
+
+            // SP値を取得（表示用）
+            const sp = getSP(typeNumber60);
+
+            // 現在の年齢
+            const currentAge = calculateAge(birthYear, birthMonth, birthDay, startYear, startMonth);
+
+            // タイプコードを取得
+            const typeCode = getTypeCode(personalityNum, currentAge);
+
+            // 派を取得
+            const faction = getFaction(personalityNum);
+
+            // 情報を表示
+            document.getElementById('infoSection').style.display = 'block';
+            document.getElementById('personalityNumber').textContent = personalityNum;
+            document.getElementById('typeNumber60').textContent = typeNumber60;
+            document.getElementById('spNumber').textContent = sp;
+            document.getElementById('currentAge').textContent = `${currentAge}歳`;
+            document.getElementById('factionDisplay').textContent = faction;
+
+            const typeDisplay = document.getElementById('typeDisplay');
+            const baseType = typeCode.charAt(0);
+            typeDisplay.textContent = `(${typeCode})`;
+            typeDisplay.className = 'type-badge type-' + baseType.toLowerCase();
+
+            // 表示期間数を取得
+            const displayCount = parseInt(document.getElementById('displayCount').value);
+
+            // 月データを生成
+            const months = [];
+            const now = new Date();
+            const currentYearNow = now.getFullYear();
+            const currentMonthNow = now.getMonth() + 1;
+
+            for (let i = 0; i < displayCount; i++) {
+                let y = startYear;
+                let m = startMonth + i;
+                while (m > 12) {
+                    m -= 12;
+                    y++;
+                }
+
+                const cycle = calculateMonthlyCycle(typeNumber60, startYear, startMonth, y, m);
+                const age = calculateAge(birthYear, birthMonth, birthDay, y, m);
+                const advice = getAdvice(typeCode, cycle, 1);
+
+                months.push({
+                    year: y,
+                    month: m,
+                    age: age,
+                    cycle: cycle,
+                    positive: advice.positive,
+                    negative: advice.negative,
+                    isCurrent: (y === currentYearNow && m === currentMonthNow)
+                });
+            }
+
+            // テーブルを生成
+            renderMonthTable(months);
+            document.getElementById('resultsSection').style.display = 'block';
+
+            // グラフを生成
+            document.getElementById('graphSection').style.display = 'block';
+            setTimeout(() => renderLifecycleChartMonth(months), 50);
+        }
+
+        // 月分析テーブルを描画
+        function renderMonthTable(months) {
+            const header = document.getElementById('tableHeader');
+            const body = document.getElementById('tableBody');
+
+            // ヘッダー
+            let headerHTML = '<tr><th class="row-header"></th>';
+            months.forEach(m => {
+                const curCls = m.isCurrent ? 'current-month' : '';
+                headerHTML += `<th class="month-header ${curCls}">${m.year}年${m.month}月</th>`;
+            });
+            headerHTML += '</tr>';
+            header.innerHTML = headerHTML;
+
+            // 年齢行
+            let ageRowHTML = '<tr class="age-row"><td class="row-header">年齢</td>';
+            months.forEach(m => {
+                const curCls = m.isCurrent ? 'current-month' : '';
+                ageRowHTML += `<td class="${curCls}">${m.age}歳</td>`;
+            });
+            ageRowHTML += '</tr>';
+
+            // サイクル行
+            let cycleRowHTML = '<tr><td class="row-header">サイクル</td>';
+            months.forEach(m => {
+                const curCls = m.isCurrent ? 'current-month' : '';
+                cycleRowHTML += `<td class="cycle-cell cycle-${m.cycle.toLowerCase()} ${curCls}">${m.cycle}</td>`;
+            });
+            cycleRowHTML += '</tr>';
+
+            // 良い面
+            let positiveRowHTML = '<tr class="advice-row positive-row"><td class="row-header">良い面</td>';
+            months.forEach(m => {
+                const curCls = m.isCurrent ? 'current-month' : '';
+                positiveRowHTML += `<td class="${curCls}">${m.positive}</td>`;
+            });
+            positiveRowHTML += '</tr>';
+
+            // 注意点
+            let negativeRowHTML = '<tr class="advice-row negative-row"><td class="row-header">注意点</td>';
+            months.forEach(m => {
+                const curCls = m.isCurrent ? 'current-month' : '';
+                negativeRowHTML += `<td class="${curCls}">${m.negative}</td>`;
+            });
+            negativeRowHTML += '</tr>';
+
+            body.innerHTML = ageRowHTML + cycleRowHTML + positiveRowHTML + negativeRowHTML;
+        }
+
+        // 月分析グラフを描画
+        function renderLifecycleChartMonth(months) {
+            const canvas = document.getElementById('lifecycleChart');
+            const ctx = canvas.getContext('2d');
+            const container = canvas.parentElement;
+
+            canvas.width = container.offsetWidth;
+            canvas.height = 320;
+
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = { top: 30, right: 40, bottom: 70, left: 50 };
+            const chartWidth = width - padding.left - padding.right;
+            const chartHeight = height - padding.top - padding.bottom;
+
+            // 背景
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, width, height);
+
+            const yMax = 10;
+            const stepWidth = chartWidth / (months.length - 1);
+
+            const points = months.map((m, i) => ({
+                x: padding.left + (i / (months.length - 1)) * chartWidth,
+                y: padding.top + chartHeight - ((CYCLE_VALUES[m.cycle] || 5) / yMax) * chartHeight,
+                cycle: m.cycle,
+                year: m.year,
+                month: m.month,
+                isCurrent: m.isCurrent
+            }));
+
+            // チャートエリアの枠
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(padding.left, padding.top, chartWidth, chartHeight);
+
+            // 横グリッド線
+            ctx.strokeStyle = '#e8e8e8';
+            for (let i = 1; i < 10; i++) {
+                const y = padding.top + (i / 10) * chartHeight;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(padding.left + chartWidth, y);
+                ctx.stroke();
+            }
+
+            // 縦グリッド線
+            points.forEach((p, idx) => {
+                if (idx > 0 && idx < points.length - 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, padding.top);
+                    ctx.lineTo(p.x, padding.top + chartHeight);
+                    ctx.stroke();
+                }
+            });
+
+            // Y軸ラベル
+            ctx.fillStyle = '#666';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 10; i += 2) {
+                const y = padding.top + chartHeight - (i / 10) * chartHeight;
+                ctx.fillText(i.toString(), padding.left - 10, y + 4);
+            }
+
+            // 折れ線
+            ctx.beginPath();
+            ctx.strokeStyle = '#43a047';
+            ctx.lineWidth = 3;
+            points.forEach((p, i) => {
+                if (i === 0) ctx.moveTo(p.x, p.y);
+                else ctx.lineTo(p.x, p.y);
+            });
+            ctx.stroke();
+
+            // データポイント
+            points.forEach(p => {
+                ctx.beginPath();
+                ctx.fillStyle = p.isCurrent ? '#ff9800' : '#43a047';
+                ctx.arc(p.x, p.y, p.isCurrent ? 8 : 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+
+            // X軸ラベル（サイクル文字）
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            points.forEach(p => {
+                ctx.fillText(p.cycle, p.x, height - padding.bottom + 20);
+            });
+
+            // X軸ラベル（月）
+            ctx.fillStyle = '#666';
+            ctx.font = '10px sans-serif';
+            points.forEach(p => {
+                ctx.fillText(`${p.month}月`, p.x, height - padding.bottom + 38);
+            });
         }
 
         // 年分析テーブルを描画
