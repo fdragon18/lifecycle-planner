@@ -204,7 +204,8 @@
 
         .results-table th.row-header {
             text-align: left;
-            width: 120px;
+            width: 70px;
+            font-size: 12px;
         }
 
         .month-header {
@@ -886,8 +887,25 @@
                 y: padding.top + chartHeight - ((CYCLE_VALUES[y.cycle] || 5) / yMax) * chartHeight,
                 cycle: y.cycle,
                 year: y.year,
-                isCurrent: y.isCurrent
+                isCurrent: y.isCurrent,
+                isTC: y.isTC
             }));
+
+            // TC年の背景帯を描画
+            const stepWidth = chartWidth / (years.length - 1);
+            points.forEach((p, i) => {
+                if (p.isTC) {
+                    ctx.fillStyle = 'rgba(255, 193, 7, 0.2)';
+                    const x = p.x - stepWidth / 2;
+                    const w = stepWidth;
+                    ctx.fillRect(
+                        Math.max(padding.left, x),
+                        padding.top,
+                        i === 0 ? w / 2 : (i === points.length - 1 ? w / 2 : w),
+                        chartHeight
+                    );
+                }
+            });
 
             // 横グリッド線
             ctx.strokeStyle = '#e0e0e0';
@@ -954,7 +972,7 @@
             ctx.fillStyle = '#666';
             ctx.font = '11px sans-serif';
             points.forEach(p => {
-                ctx.fillText(p.year + '年', p.x, height - padding.bottom + 38);
+                ctx.fillText("'" + String(p.year).slice(-2), p.x, height - padding.bottom + 38);
             });
         }
     </script>
