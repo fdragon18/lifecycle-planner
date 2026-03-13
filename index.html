@@ -1308,7 +1308,17 @@
             document.getElementById('spNumber').textContent = sp;
             document.getElementById('juniunDisplay').textContent = juniun;
             document.getElementById('factionDisplay').textContent = faction;
-            document.getElementById('currentAge').textContent = '-';  // 分析時に更新
+
+            // 現在の年齢を計算（今日の日付基準）
+            const today = new Date();
+            const currentYear = today.getFullYear();
+            const currentMonth = today.getMonth() + 1;
+            const currentDay = today.getDate();
+            let age = currentYear - birthYear;
+            if (currentMonth < birthMonth || (currentMonth === birthMonth && currentDay < birthDay)) {
+                age--;
+            }
+            document.getElementById('currentAge').textContent = `${age}歳`;
 
             const typeDisplay = document.getElementById('typeDisplay');
             const baseType = typeCode.charAt(0);
@@ -1340,9 +1350,6 @@
                 document.getElementById(id).addEventListener('change', updateBasicInfo);
             });
 
-            // 初期表示（保存された値がある場合）
-            setTimeout(updateBasicInfo, 100);
-
             // サイクルデータを読み込み
             try {
                 const response = await fetch('cycle_data.json');
@@ -1368,6 +1375,9 @@
                     updateAuthUI(null);
                 }
             });
+
+            // 初期表示（保存された値がある場合、データ読み込み完了後に実行）
+            updateBasicInfo();
         });
 
         // Excelシリアル日付を計算（1900年1月1日を1とする）
