@@ -924,7 +924,7 @@
                 const date = new Date(item.created_at).toLocaleDateString('ja-JP');
                 const birthStr = `${item.birth_year}/${item.birth_month}/${item.birth_day}`;
                 return `
-                    <div class="history-item" onclick="loadFromHistory('${item.id}', ${item.birth_year}, ${item.birth_month}, ${item.birth_day})">
+                    <div class="history-item" onclick="loadFromHistory('${item.id}', ${item.birth_year}, ${item.birth_month}, ${item.birth_day}, '${(item.name || '').replace(/'/g, "\\'")}')">
                         <span class="history-name">${name}</span>
                         <span class="history-date">${birthStr}</span>
                         <span class="history-delete" onclick="event.stopPropagation(); deleteHistory('${item.id}')">×</span>
@@ -933,10 +933,11 @@
             }).join('');
         }
 
-        function loadFromHistory(id, birthYear, birthMonth, birthDay) {
+        function loadFromHistory(id, birthYear, birthMonth, birthDay, name) {
             document.getElementById('birthYear').value = birthYear;
             document.getElementById('birthMonth').value = birthMonth;
             document.getElementById('birthDay').value = birthDay;
+            document.getElementById('searchName').value = name || '';
         }
 
         async function deleteHistory(id) {
