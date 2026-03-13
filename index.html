@@ -413,20 +413,16 @@
             7: 'A★', 8: 'A☆', 9: 'F★', 10: 'F☆', 11: 'M★', 12: 'M☆'
         };
 
-        // SP(1-10)別サイクル順序テーブル
-        // VBAのライフサイクルマスタから抽出
-        const SP_CYCLE_ORDER = {
-            1: ['X', 'Z', 'B', 'D', 'E', 'A', 'C', 'Y', 'G', 'F'],
-            2: ['F', 'B', 'Z', 'E', 'D', 'C', 'A', 'G', 'Y', 'X'],
-            3: ['G', 'F', 'X', 'Z', 'B', 'D', 'E', 'A', 'C', 'Y'],
-            4: ['Y', 'X', 'F', 'B', 'Z', 'E', 'D', 'C', 'A', 'G'],
-            5: ['C', 'Y', 'G', 'F', 'X', 'Z', 'B', 'D', 'E', 'A'],
-            6: ['A', 'G', 'Y', 'X', 'F', 'B', 'Z', 'E', 'D', 'C'],
-            7: ['E', 'A', 'C', 'Y', 'G', 'F', 'X', 'Z', 'B', 'D'],
-            8: ['D', 'C', 'A', 'G', 'Y', 'X', 'F', 'B', 'Z', 'E'],
-            9: ['B', 'D', 'E', 'A', 'C', 'Y', 'G', 'F', 'X', 'Z'],
-            10: ['Z', 'E', 'D', 'C', 'A', 'G', 'Y', 'X', 'F', 'B']
-        };
+        // 2つのサイクルパターン（VBA解析結果）
+        // パターンA: 標準順序
+        // パターンB: GとCが入れ替わり
+        const CYCLE_PATTERN_A = ['G', 'X', 'Y', 'Z', 'A', 'B', 'C', 'D', 'E', 'F'];
+        const CYCLE_PATTERN_B = ['C', 'X', 'Y', 'Z', 'A', 'B', 'G', 'D', 'E', 'F'];
+
+        // SPに基づいてパターンを選択（仮説: 偶数SPはパターンB）
+        function getCyclePattern(sp) {
+            return (sp % 2 === 0) ? CYCLE_PATTERN_B : CYCLE_PATTERN_A;
+        }
 
         // 初期化
         document.addEventListener('DOMContentLoaded', async () => {
@@ -513,21 +509,23 @@
             return (personalityNum % 2 === 1) ? '楽観派' : '慎重派';
         }
 
-        // 年のサイクルを計算（SP別テーブル参照）
-        function calculateYearlyCycle(spForCycle, startYear, targetYear) {
+        // 年のサイクルを計算（2パターン方式）
+        function calculateYearlyCycle(sp, startYear, targetYear) {
             // 起点年からの経過年数を計算
             const yearsElapsed = targetYear - startYear;
 
             // レベルは経過年数の3分割（10年ごとにレベルが変わる）
             const level = (Math.floor(Math.abs(yearsElapsed) / 10) % 3) + 1;
 
-            // サイクルインデックス: 年の末尾 + 4（VBA検証結果）
+            // パターン選択（SPに基づく）
+            const cyclePattern = getCyclePattern(sp);
+
+            // サイクルインデックス: 年の末尾 + 4
             const yearLastDigit = targetYear % 10;
             const cycleIndex = (yearLastDigit + 4) % 10;
 
-            // SP別テーブルからサイクル文字を取得
-            const cycleOrder = SP_CYCLE_ORDER[spForCycle] || SP_CYCLE_ORDER[1];
-            const cycle = cycleOrder[cycleIndex];
+            // パターンからサイクル文字を取得
+            const cycle = cyclePattern[cycleIndex];
 
             return {
                 cycle: cycle,
@@ -600,7 +598,7 @@
             const faction = getFaction(personalityNum);
 
             // 現在のサイクル情報を取得（起点年）
-            const currentCycleInfo = calculateYearlyCycle(spForCycle, startYear, startYear);
+            const currentCycleInfo = calculateYearlyCycle(sp, startYear, startYear);
 
             // 情報を表示
             document.getElementById('infoSection').style.display = 'block';
@@ -626,7 +624,7 @@
             for (let i = 0; i < 10; i++) {
                 const y = startYear + i;
                 const age = calculateAge(birthYear, birthMonth, birthDay, y, birthMonth);
-                const cycleInfo = calculateYearlyCycle(spForCycle, startYear, y);
+                const cycleInfo = calculateYearlyCycle(sp, startYear, y);
                 const advice = getAdvice(typeCode, cycleInfo.cycle, cycleInfo.level);
 
                 years.push({
