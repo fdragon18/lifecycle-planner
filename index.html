@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ライフサイクルプランニングシート</title>
-    <!-- v2.3 - プルダウン化, 初期値1993/10/6 -->
+    <!-- v2.4 - モバイルレスポンシブ改善 -->
     <style>
         * {
             box-sizing: border-box;
@@ -275,18 +275,88 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.4em;
+                margin-bottom: 15px;
+            }
+
+            .input-section {
+                padding: 15px;
+            }
+
             .input-row {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 12px;
             }
 
             .input-group {
-                justify-content: space-between;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .input-group label {
+                width: 70px;
+                flex-shrink: 0;
+            }
+
+            .input-group select {
+                width: 70px;
+                padding: 6px 8px;
+                font-size: 14px;
+            }
+
+            .input-group span {
+                font-size: 13px;
+                margin: 0 2px;
+            }
+
+            .btn-analyze {
+                width: 100%;
+                margin-top: 5px;
+            }
+
+            .info-section {
+                padding: 15px;
             }
 
             .info-row {
                 flex-direction: column;
-                gap: 10px;
+                gap: 8px;
+            }
+
+            .info-item {
+                display: flex;
+                justify-content: space-between;
+                padding: 5px 0;
+                border-bottom: 1px solid #eee;
+            }
+
+            .results-section {
+                padding: 10px;
+                overflow-x: auto;
+            }
+
+            .results-table {
+                font-size: 11px;
+                min-width: 600px;
+            }
+
+            .results-table th,
+            .results-table td {
+                padding: 6px 4px;
+            }
+
+            .graph-section {
+                padding: 15px;
+            }
+
+            .graph-container {
+                height: 200px;
             }
         }
     </style>
