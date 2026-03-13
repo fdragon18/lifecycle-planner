@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ライフサイクルプランニングシート</title>
-    <!-- v2.7 - SP計算を修正（60類型番号の下1桁） -->
+    <!-- v2.8 - TC年（不安定期）ハイライト機能追加 -->
     <style>
         * {
             box-sizing: border-box;
@@ -254,6 +254,14 @@
             font-weight: bold;
         }
 
+        .tc-year {
+            background: #ffcdd2 !important;  /* 薄い赤 */
+        }
+
+        .tc-year.current-month {
+            background: linear-gradient(135deg, #fff59d 50%, #ffcdd2 50%) !important;
+        }
+
         .graph-section {
             background: white;
             border-radius: 16px;
@@ -497,6 +505,33 @@
             9: ['E', 'F', 'G', 'X', 'Y', 'Z', 'A', 'B', 'C', 'D'],  // SP=9
             0: ['F', 'E', 'X', 'G', 'Z', 'Y', 'B', 'A', 'D', 'C']   // SP=10
         };
+
+        // TC年（不安定期）計算
+        // 各グループの基準年オフセット（1900年から）
+        const TC_GROUP_OFFSETS = [10, 8, 18, 16, 14, 0]; // グループ0-5
+
+        function getTCYears(type60, startYear, endYear) {
+            const groupIndex = Math.floor((type60 - 1) / 10);  // 0-5
+            const position = (type60 - 1) % 10;                 // 0-9
+
+            // 基準TC年 = 1900 + グループオフセット + 位置×12
+            const baseTC = 1900 + TC_GROUP_OFFSETS[groupIndex] + position * 12;
+
+            // 120年周期で繰り返し（10位置 × 12年）
+            const tcYears = new Set();
+            for (let year = baseTC; year <= endYear + 120; year += 120) {
+                if (year >= startYear - 120) {
+                    tcYears.add(year);
+                    tcYears.add(year + 1);  // TC年は2年連続
+                }
+            }
+            return tcYears;
+        }
+
+        function isTCYear(type60, year) {
+            const tcYears = getTCYears(type60, year - 1, year + 1);
+            return tcYears.has(year);
+        }
 
         // プルダウン初期化
         function populateDropdowns() {
@@ -754,7 +789,8 @@
                     level: cycleInfo.level,
                     positive: advice.positive,
                     negative: advice.negative,
-                    isCurrent: (y === currentYearNow)
+                    isCurrent: (y === currentYearNow),
+                    isTC: isTCYear(typeNumber60, y)  // TC年フラグ
                 });
             }
 
@@ -775,8 +811,9 @@
             // ヘッダー
             let headerHTML = '<tr><th class="row-header"></th>';
             years.forEach(y => {
-                const cls = y.isCurrent ? 'current-month' : '';
-                headerHTML += `<th class="month-header ${cls}">${y.year}年</th>`;
+                const tcCls = y.isTC ? 'tc-year' : '';
+                const curCls = y.isCurrent ? 'current-month' : '';
+                headerHTML += `<th class="month-header ${tcCls} ${curCls}">${y.year}年</th>`;
             });
             headerHTML += '</tr>';
             header.innerHTML = headerHTML;
@@ -784,32 +821,37 @@
             // 年齢行
             let ageRowHTML = '<tr class="age-row"><td class="row-header">年齢</td>';
             years.forEach(y => {
-                const cls = y.isCurrent ? 'current-month' : '';
-                ageRowHTML += `<td class="${cls}">${y.age}歳</td>`;
+                const tcCls = y.isTC ? 'tc-year' : '';
+                const curCls = y.isCurrent ? 'current-month' : '';
+                ageRowHTML += `<td class="${tcCls} ${curCls}">${y.age}歳</td>`;
             });
             ageRowHTML += '</tr>';
 
             // サイクル行（アルファベットのみ）
             let cycleRowHTML = '<tr><td class="row-header">サイクル</td>';
             years.forEach(y => {
-                const cls = `cycle-cell cycle-${y.cycle.toLowerCase()} ${y.isCurrent ? 'current-month' : ''}`;
-                cycleRowHTML += `<td class="${cls}">${y.cycle}</td>`;
+                const tcCls = y.isTC ? 'tc-year' : '';
+                const curCls = y.isCurrent ? 'current-month' : '';
+                const cycleCls = `cycle-cell cycle-${y.cycle.toLowerCase()}`;
+                cycleRowHTML += `<td class="${cycleCls} ${tcCls} ${curCls}">${y.cycle}</td>`;
             });
             cycleRowHTML += '</tr>';
 
             // ポジティブ行（レベル1）
             let positive1HTML = '<tr class="advice-row"><td class="row-header" style="color:#2e7d32;">良い面 Lv1</td>';
             years.forEach(y => {
-                const cls = y.isCurrent ? 'current-month' : '';
-                positive1HTML += `<td class="positive ${cls}">${y.positive || '-'}</td>`;
+                const tcCls = y.isTC ? 'tc-year' : '';
+                const curCls = y.isCurrent ? 'current-month' : '';
+                positive1HTML += `<td class="positive ${tcCls} ${curCls}">${y.positive || '-'}</td>`;
             });
             positive1HTML += '</tr>';
 
             // ネガティブ行（レベル1）
             let negative1HTML = '<tr class="advice-row"><td class="row-header" style="color:#c62828;">注意点 Lv1</td>';
             years.forEach(y => {
-                const cls = y.isCurrent ? 'current-month' : '';
-                negative1HTML += `<td class="negative ${cls}">${y.negative || '-'}</td>`;
+                const tcCls = y.isTC ? 'tc-year' : '';
+                const curCls = y.isCurrent ? 'current-month' : '';
+                negative1HTML += `<td class="negative ${tcCls} ${curCls}">${y.negative || '-'}</td>`;
             });
             negative1HTML += '</tr>';
 
