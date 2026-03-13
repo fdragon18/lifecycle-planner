@@ -475,8 +475,14 @@
             4,5,11,3,6,8,4,5,11,3,10,10,3,11,11,3,10,10,3,11
         ];
 
-        // SP = 60類型番号の下1桁（ExcelのRIGHT(G3,1)に相当）
-        // 60類型番号が10,20,30...の場合は10として扱う
+        // 60類型番号 → SP(1-12) マッピング（表示用）
+        const SP_TABLE = [
+            7,2,8,5,4,6,9,1,10,11,2,12,11,4,6,7,1,8,7,2,
+            8,5,3,10,9,1,10,11,2,12,5,3,6,7,1,8,11,4,12,9,
+            3,10,9,1,8,5,4,6,5,3,6,7,2,12,11,4,12,9,3,10
+        ];
+
+        // サイクル計算用SP = 60類型番号の下1桁（ExcelのRIGHT(G3,1)に相当）
 
         // 個性番号 → タイプ マッピング
         // F=前進型, A=調和型, M=堅実型
@@ -630,16 +636,15 @@
             return PERSONALITY_TABLE[typeNumber60 - 1];
         }
 
-        // SP値を取得（60類型番号の下1桁、0の場合は10）
+        // SP値を取得（表示用、SP_TABLEから）
         function getSP(typeNumber60) {
-            const lastDigit = typeNumber60 % 10;
-            return lastDigit === 0 ? 10 : lastDigit;
+            return SP_TABLE[typeNumber60 - 1];
         }
 
-        // サイクル順序決定用SP（1-10）
-        function getSPForCycle(sp) {
-            const mod = sp % 10;
-            return mod === 0 ? 10 : mod;
+        // サイクル計算用SP（60類型番号の下1桁、0の場合は10）
+        function getSPForCycle(typeNumber60) {
+            const lastDigit = typeNumber60 % 10;
+            return lastDigit === 0 ? 10 : lastDigit;
         }
 
         // タイプコードを取得（個性番号と年齢から）
@@ -735,8 +740,8 @@
             // SP値を取得（1-12、表示用）
             const sp = getSP(typeNumber60);
 
-            // サイクル順序決定用SP（1-10）: SP値から計算
-            const spForCycle = sp % 10 || 10;
+            // サイクル順序決定用SP（1-10）: 60類型番号の下1桁
+            const spForCycle = getSPForCycle(typeNumber60);
 
             // 現在の年齢を計算（年分析なので起点年の1月時点）
             const currentAge = calculateAge(birthYear, birthMonth, birthDay, startYear, 1);
@@ -748,7 +753,7 @@
             const faction = getFaction(personalityNum);
 
             // 現在のサイクル情報を取得（起点年）
-            const currentCycleInfo = calculateYearlyCycle(sp, startYear, startYear);
+            const currentCycleInfo = calculateYearlyCycle(spForCycle, startYear, startYear);
 
             // 情報を表示
             document.getElementById('infoSection').style.display = 'block';
@@ -764,7 +769,7 @@
             typeDisplay.className = 'type-badge type-' + baseType.toLowerCase();
 
             // デバッグ情報（コンソール）
-            console.log('60類型番号:', typeNumber60, '個性番号:', personalityNum, 'SP(cycle):', spForCycle, 'タイプ:', typeCode);
+            console.log('60類型番号:', typeNumber60, '個性番号:', personalityNum, 'SP(表示):', sp, 'SP(cycle):', spForCycle, 'タイプ:', typeCode);
 
             // 10年分のデータを生成
             const years = [];
@@ -773,7 +778,7 @@
             for (let i = 0; i < 10; i++) {
                 const y = startYear + i;
                 const age = calculateAge(birthYear, birthMonth, birthDay, y, birthMonth);
-                const cycleInfo = calculateYearlyCycle(sp, startYear, y);
+                const cycleInfo = calculateYearlyCycle(spForCycle, startYear, y);
                 const advice = getAdvice(typeCode, cycleInfo.cycle, cycleInfo.level);
 
                 years.push({
