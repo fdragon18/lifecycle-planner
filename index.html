@@ -960,6 +960,28 @@
 
             const name = document.getElementById('searchName').value.trim() || null;
 
+            // 同じ内容が既に存在するかチェック
+            let query = supabaseClient
+                .from('searches')
+                .select('id')
+                .eq('user_id', currentUser.id)
+                .eq('birth_year', birthYear)
+                .eq('birth_month', birthMonth)
+                .eq('birth_day', birthDay);
+
+            if (name) {
+                query = query.eq('name', name);
+            } else {
+                query = query.is('name', null);
+            }
+
+            const { data: existing } = await query.limit(1);
+
+            if (existing && existing.length > 0) {
+                // 既に存在する場合はスキップ
+                return;
+            }
+
             const { error } = await supabaseClient
                 .from('searches')
                 .insert({
