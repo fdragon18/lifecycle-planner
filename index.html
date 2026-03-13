@@ -34,52 +34,8 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
 
-        .password-screen {
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            max-width: 400px;
-            margin: 100px auto;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-
-        .password-screen h2 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .password-screen input {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-
-        .password-screen button {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .password-screen button:hover {
-            opacity: 0.9;
-        }
-
-        .error-msg {
-            color: #e74c3c;
-            margin-top: 10px;
-        }
-
         .main-app {
-            display: none;
+            display: block;
         }
 
         .input-section {
@@ -560,15 +516,7 @@
 </head>
 <body>
     <div class="container">
-        <div id="passwordScreen" class="password-screen">
-            <h2>ライフサイクルプランニング</h2>
-            <p style="margin-bottom: 20px; color: #666;">パスワードを入力してください</p>
-            <input type="password" id="passwordInput" placeholder="パスワード" onkeypress="if(event.key==='Enter')checkPassword()">
-            <button onclick="checkPassword()">ログイン</button>
-            <p id="errorMsg" class="error-msg" style="display:none;">パスワードが違います</p>
-        </div>
-
-        <div id="mainApp" class="main-app">
+        <div id="mainApp" class="main-app" style="display:block">
             <h1>ライフサイクルプランニングシート</h1>
 
             <!-- Auth Section -->
@@ -707,9 +655,6 @@
 
         // 現在のユーザー
         let currentUser = null;
-
-        // パスワード（簡易認証）
-        const PASSWORD = 'lifecycle2024';
 
         // サイクルデータ
         let cycleData = {};
@@ -1122,27 +1067,7 @@
                     updateAuthUI(null);
                 }
             });
-
-            // セッションチェック
-            if (sessionStorage.getItem('authenticated') === 'true') {
-                showMainApp();
-            }
         });
-
-        function checkPassword() {
-            const input = document.getElementById('passwordInput').value;
-            if (input === PASSWORD) {
-                sessionStorage.setItem('authenticated', 'true');
-                showMainApp();
-            } else {
-                document.getElementById('errorMsg').style.display = 'block';
-            }
-        }
-
-        function showMainApp() {
-            document.getElementById('passwordScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-        }
 
         // Excelシリアル日付を計算（1900年1月1日を1とする）
         function excelSerialDate(year, month, day) {
