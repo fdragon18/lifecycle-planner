@@ -520,12 +520,16 @@
             // レベルは経過年数の3分割（10年ごとにレベルが変わる）
             const level = (Math.floor(Math.abs(yearsElapsed) / 10) % 3) + 1;
 
-            // パターン選択（SPに基づく）
-            const cyclePattern = getCyclePattern(sp);
+            // SPからサイクル用SP(1-10)を計算
+            const spForCycle = sp % 10 || 10;
 
-            // サイクルインデックス: 年の末尾 + 4
+            // パターン選択（SPの偶奇に基づく）
+            const cyclePattern = getCyclePattern(spForCycle);
+
+            // サイクルインデックス: SPによって開始位置が変わる
+            // 式: (年の末尾 + 8 - 2*spForCycle) % 10
             const yearLastDigit = targetYear % 10;
-            const cycleIndex = (yearLastDigit + 4) % 10;
+            const cycleIndex = (yearLastDigit + 8 - 2 * spForCycle + 20) % 10;
 
             // パターンからサイクル文字を取得
             const cycle = cyclePattern[cycleIndex];
