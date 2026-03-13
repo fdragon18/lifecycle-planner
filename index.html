@@ -595,9 +595,32 @@
         }
 
         // プルダウン初期化
+        // 入力値をlocalStorageに保存
+        function saveInputs() {
+            const inputs = {
+                birthYear: document.getElementById('birthYear').value,
+                birthMonth: document.getElementById('birthMonth').value,
+                birthDay: document.getElementById('birthDay').value,
+                startYear: document.getElementById('startYear').value,
+                startMonth: document.getElementById('startMonth').value,
+                displayCount: document.getElementById('displayCount').value
+            };
+            localStorage.setItem('lifecyclePlannerInputs', JSON.stringify(inputs));
+        }
+
+        // localStorageから入力値を読み込み
+        function loadInputs() {
+            const saved = localStorage.getItem('lifecyclePlannerInputs');
+            if (saved) {
+                return JSON.parse(saved);
+            }
+            return null;
+        }
+
         function populateDropdowns() {
             const now = new Date();
             const currentYear = now.getFullYear();
+            const saved = loadInputs();
 
             // 生年: 1920年〜現在年
             const birthYearSelect = document.getElementById('birthYear');
@@ -607,7 +630,7 @@
                 opt.textContent = y;
                 birthYearSelect.appendChild(opt);
             }
-            birthYearSelect.value = 1993; // デフォルト
+            birthYearSelect.value = saved?.birthYear || currentYear - 30;
 
             // 月: 1〜12
             const birthMonthSelect = document.getElementById('birthMonth');
@@ -617,7 +640,7 @@
                 opt.textContent = m;
                 birthMonthSelect.appendChild(opt);
             }
-            birthMonthSelect.value = 10; // デフォルト
+            birthMonthSelect.value = saved?.birthMonth || 1;
 
             // 日: 1〜31
             const birthDaySelect = document.getElementById('birthDay');
@@ -627,7 +650,7 @@
                 opt.textContent = d;
                 birthDaySelect.appendChild(opt);
             }
-            birthDaySelect.value = 6; // デフォルト
+            birthDaySelect.value = saved?.birthDay || 1;
 
             // 起点年: 1950年〜現在年+20年
             const startYearSelect = document.getElementById('startYear');
@@ -637,7 +660,7 @@
                 opt.textContent = y;
                 startYearSelect.appendChild(opt);
             }
-            startYearSelect.value = currentYear; // デフォルト
+            startYearSelect.value = saved?.startYear || currentYear;
 
             // 起点月: 1〜12
             const startMonthSelect = document.getElementById('startMonth');
@@ -647,7 +670,12 @@
                 opt.textContent = m;
                 startMonthSelect.appendChild(opt);
             }
-            startMonthSelect.value = now.getMonth() + 1; // 今月
+            startMonthSelect.value = saved?.startMonth || (now.getMonth() + 1);
+
+            // 表示期間数
+            if (saved?.displayCount) {
+                document.getElementById('displayCount').value = saved.displayCount;
+            }
         }
 
         // 初期化
@@ -801,6 +829,9 @@
                 return;
             }
 
+            // 入力値を保存
+            saveInputs();
+
             // 60類型番号を計算
             const typeNumber60 = calculate60TypeNumber(birthYear, birthMonth, birthDay);
 
@@ -898,6 +929,9 @@
                 alert('すべての項目を入力してください');
                 return;
             }
+
+            // 入力値を保存
+            saveInputs();
 
             // 60類型番号を計算
             const typeNumber60 = calculate60TypeNumber(birthYear, birthMonth, birthDay);
