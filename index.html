@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ライフサイクルプランニングシート</title>
-    <!-- v2.4 - モバイルレスポンシブ改善 -->
+    <!-- v2.5 - サイクル計算をExcelルックアップテーブル方式に変更 -->
     <style>
         * {
             box-sizing: border-box;
@@ -486,16 +486,24 @@
             7: 'A★', 8: 'A☆', 9: 'M★', 10: 'M☆', 11: 'F★', 12: 'F☆'
         };
 
-        // 2つのサイクルパターン（VBA解析結果）
-        // パターンA: 標準順序
-        // パターンB: GとCが入れ替わり
-        const CYCLE_PATTERN_A = ['G', 'X', 'Y', 'Z', 'A', 'B', 'C', 'D', 'E', 'F'];
-        const CYCLE_PATTERN_B = ['C', 'X', 'Y', 'Z', 'A', 'B', 'G', 'D', 'E', 'F'];
+        // SP別サイクルテーブル（Excelライフサイクルマスタ（年）行32-41から抽出）
+        // キー: SP % 10 (0は10として扱う)
+        // 値: 列B-Kの10サイクル
+        const SP_CYCLE_TABLE = {
+            1: ['D', 'E', 'F', 'G', 'X', 'Y', 'Z', 'A', 'B', 'C'],
+            2: ['C', 'F', 'E', 'X', 'G', 'Z', 'Y', 'B', 'A', 'D'],
+            3: ['B', 'C', 'D', 'E', 'F', 'G', 'X', 'Y', 'Z', 'A'],
+            4: ['A', 'D', 'C', 'F', 'E', 'X', 'G', 'Z', 'Y', 'B'],
+            5: ['Z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'X', 'Y'],
+            6: ['Y', 'B', 'A', 'D', 'C', 'F', 'E', 'X', 'G', 'Z'],
+            7: ['X', 'Y', 'Z', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
+            8: ['G', 'Z', 'Y', 'B', 'A', 'D', 'C', 'F', 'E', 'X'],
+            9: ['F', 'G', 'X', 'Y', 'Z', 'A', 'B', 'C', 'D', 'E'],
+            0: ['E', 'X', 'G', 'Z', 'Y', 'B', 'A', 'D', 'C', 'F']  // SP=10,20等
+        };
 
-        // SPに基づいてパターンを選択（仮説: 偶数SPはパターンB）
-        function getCyclePattern(sp) {
-            return (sp % 2 === 0) ? CYCLE_PATTERN_B : CYCLE_PATTERN_A;
-        }
+        // 年の下1桁 → 列インデックス（Excelの列B-Kに対応）
+        const YEAR_DIGIT_TO_COL = {7:0, 8:1, 9:2, 0:3, 1:4, 2:5, 3:6, 4:7, 5:8, 6:9};
 
         // プルダウン初期化
         function populateDropdowns() {
@@ -627,7 +635,7 @@
             return (personalityNum % 2 === 1) ? '楽観派' : '慎重派';
         }
 
-        // 年のサイクルを計算（2パターン方式）
+        // 年のサイクルを計算（Excelルックアップテーブル方式）
         function calculateYearlyCycle(sp, startYear, targetYear) {
             // 起点年からの経過年数を計算
             const yearsElapsed = targetYear - startYear;
@@ -635,19 +643,14 @@
             // レベルは経過年数の3分割（10年ごとにレベルが変わる）
             const level = (Math.floor(Math.abs(yearsElapsed) / 10) % 3) + 1;
 
-            // SPからサイクル用SP(1-10)を計算
-            const spForCycle = sp % 10 || 10;
+            // SP下1桁でテーブル行を決定
+            const spKey = sp % 10;
+            const baseCycles = SP_CYCLE_TABLE[spKey];
 
-            // パターン選択（SPの偶奇に基づく）
-            const cyclePattern = getCyclePattern(spForCycle);
-
-            // サイクルインデックス: SPによって開始位置が変わる
-            // 式: (年の末尾 + 8 - 2*spForCycle) % 10
-            const yearLastDigit = targetYear % 10;
-            const cycleIndex = (yearLastDigit + 8 - 2 * spForCycle + 20) % 10;
-
-            // パターンからサイクル文字を取得
-            const cycle = cyclePattern[cycleIndex];
+            // 年の下1桁で列インデックスを決定（直接マッピング）
+            const yearDigit = targetYear % 10;
+            const colIndex = YEAR_DIGIT_TO_COL[yearDigit];
+            const cycle = baseCycles[colIndex];
 
             return {
                 cycle: cycle,
