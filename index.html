@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ライフサイクルプランニングシート</title>
+    <!-- v2.1 - TYPE_MAPPING修正, 2パターン方式 -->
     <style>
         * {
             box-sizing: border-box;
@@ -408,9 +409,11 @@
         ];
 
         // 個性番号 → タイプ マッピング
+        // F=前進型, A=調和型, M=堅実型
+        // ★=楽観派(奇数), ☆=慎重派(偶数)
         const TYPE_MAPPING = {
             1: 'F★', 2: 'F☆', 3: 'A★', 4: 'A☆', 5: 'M★', 6: 'M☆',
-            7: 'A★', 8: 'A☆', 9: 'F★', 10: 'F☆', 11: 'M★', 12: 'M☆'
+            7: 'A★', 8: 'A☆', 9: 'M★', 10: 'M☆', 11: 'F★', 12: 'F☆'
         };
 
         // 2つのサイクルパターン（VBA解析結果）
