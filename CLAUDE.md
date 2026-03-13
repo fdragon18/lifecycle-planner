@@ -15,15 +15,17 @@
 
 - 静的HTML/CSS/JavaScript（フレームワークなし）
 - GitHub Pages でホスティング
-- 簡易パスワード認証（セッションストレージ）
+- Supabase認証（メール/パスワード）
+- Supabase Database（検索履歴保存、RLS有効）
 
 ## ファイル構成
 
 ```
 lifecycle-planner/
 ├── CLAUDE.md            # このファイル
-├── index.html           # メインアプリ
+├── index.html           # メインアプリ (v4.0)
 ├── cycle_data.json      # サイクル別行動一覧（239エントリー）
+├── supabase_setup.sql   # Supabaseテーブル作成SQL
 └── docs/
     ├── ANALYSIS.md      # Excel解析ドキュメント
     └── tables.json      # 計算テーブル（60類型等）
@@ -143,8 +145,45 @@ const CYCLE_VALUES = {
 - [ ] 月サイクル計算（ライフサイクルマスタ（月）使用）
 - [ ] 日サイクル計算（ライフサイクルマスタ（日）使用）
 
+## Supabase連携 (v4.0)
+
+### プロジェクト情報
+- URL: `https://vwcetyahgnqfrqlgnelx.supabase.co`
+- 認証方式: メール/パスワード
+
+### データベース構造
+
+```sql
+-- 検索履歴テーブル
+CREATE TABLE searches (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT,                    -- 検索の名前（任意）
+  birth_year INT NOT NULL,
+  birth_month INT NOT NULL,
+  birth_day INT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### Row Level Security (RLS)
+- 有効化済み
+- ユーザーは自分のデータのみ参照・追加・削除可能
+
+### 機能
+- ログイン/サインアップ/ログアウト
+- 検索履歴の保存（名前付け可能）
+- 履歴からの読み込み
+- 履歴の削除
+
+## バージョン履歴
+
+- v4.0: Supabase認証・検索履歴機能
+- v3.0: TC年計算修正（12年周期）
+- v2.0: 月分析機能追加
+- v1.0: 初期リリース
+
 ## 開発メモ
 
-- パスワード: `lifecycle2024`
 - GitHub: fdragon18 アカウント
 - 元Excelファイル: `/Users/ddra/Downloads/ライフサイクルプランニングシート _170608.xlsm`
